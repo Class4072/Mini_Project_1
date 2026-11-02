@@ -1,0 +1,111 @@
+# ============================================================
+# TP 모노레포 공통 .gitignore
+# 서비스별 세부 규칙은 각 폴더(TP_AI, TP_BATCH ...)의 .gitignore에 둔다.
+# ============================================================
+
+# ── 비밀값 (절대 커밋 금지) ─────────────────────────────────
+# 환경변수 파일: 예시 파일(.env.example)만 올린다
+.env
+.env.*
+*.env
+!.env.example
+!*.env.example
+
+# 시크릿 프로퍼티 (TourAPI 서비스키, 기상청 authKey, DB 접속정보)
+secrets*.properties
+!secrets*.properties.example
+api_keys*
+.secrets/
+
+# 인증서 · 개인키 · 키스토어
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+
+# 클라우드 · 서비스 계정 자격증명
+credentials*.json
+service-account*.json
+client_secret*.json
+*-adminsdk-*.json
+.npmrc
+.pypirc
+.netrc
+
+# Spring Boot 로컬/비밀 설정 (application.yml은 ${ENV} 참조만 두고 커밋)
+application-local.yml
+application-local.yaml
+application-local.properties
+application-secret*.yml
+application-secret*.yaml
+application-secret*.properties
+
+# Docker Compose 로컬 덮어쓰기
+docker-compose.override.yml
+
+# Claude Code 개인 설정
+.claude/settings.local.json
+
+# ── 데이터 · 백업 · 로그 (개인정보·원본 데이터 유출 방지) ──
+TP_BATCH/output/
+*.dump
+*.bak
+*.sqlite
+*.sqlite3
+*.db
+logs/
+*.log
+
+# ── 저장소에 넣지 않기로 한 것 ─────────────────────────────
+# 다른 프로젝트(지역 맛집 SNS) 기획 노트
+document/
+# TP_BATCH 테스트 코드 (기존 설정 유지)
+TP_BATCH/tests/
+TP_BATCH/requirements-dev.txt
+
+# ── 대용량 모델 가중치 (sentence-transformers / Ollama) ────
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+.cache/
+
+# ── Python (TP_AI, TP_BATCH) ───────────────────────────────
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ── Node (TP_FE: React / Vite) ─────────────────────────────
+node_modules/
+dist/
+.vite/
+coverage/
+
+# ── Gradle / Kotlin (TP_BE: Spring Boot) ───────────────────
+.gradle/
+build/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+
+# ── IDE · OS ───────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
