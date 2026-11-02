@@ -9,12 +9,12 @@ AI와 공공데이터(한국관광공사 TourAPI, 기상청 예보)를 바탕으
 
 | 폴더 | 역할 | 기술 | 명세 문서 | 현재 상태 |
 | :--- | :--- | :--- | :--- | :--- |
-| [TP_AI](./TP_AI) | RAG 장소 추천, 동선 최적화 | Python, FastAPI, pgvector | [AI.md](./TP_AI/AI.md) | 코드 있음 ([README](./TP_AI/README.md)) |
-| [TP_BATCH](./TP_BATCH) | TourAPI 수집·정제, 임베딩 적재 | Python, PostgreSQL, APScheduler | [BATCH.md](./TP_BATCH/BATCH.md) | 코드 있음 ([README](./TP_BATCH/README.md)) |
+| [TP_AI](./TP_AI) | RAG 장소 추천, 동선 최적화 | Python, FastAPI, pgvector | [AI.md](./TP_AI/AI.md) | 코드 있음 |
+| [TP_BATCH](./TP_BATCH) | TourAPI 수집·정제, 임베딩 적재 | Python, PostgreSQL, APScheduler | [BATCH.md](./TP_BATCH/BATCH.md) | 코드 있음 |
 | [TP_BE](./TP_BE) | 여행 REST API, AI 서비스 연동 | Kotlin, Spring Boot | [BACKEND.md](./TP_BE/BACKEND.md) | 명세만 있음 |
 | [TP_FE](./TP_FE) | 카카오맵 기반 일정·동선 화면 | React, TypeScript, Vite | [FRONTEND.md](./TP_FE/FRONTEND.md) | 명세만 있음 |
 
-각 서비스의 설치·실행 방법은 해당 폴더의 README를 참고하세요.
+각 서비스의 설계와 실행 방법은 해당 폴더의 명세 문서(AI.md, BATCH.md, BACKEND.md, FRONTEND.md)를 참고하세요.
 
 ## 비밀값 관리
 
