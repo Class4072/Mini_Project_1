@@ -21,7 +21,7 @@ daily = refresh → ingest-gallery → enrich 를 하루 호출 한도 안에서
 schedule = daily를 매일 새벽(기본 04:00 KST)에 실행하는 상주 스케줄러
 ```
 
-테이블 설계(PLACE / PLACE_DETAIL / PLACE_EMBEDDING)는 [docs/SCHEMA.md](docs/SCHEMA.md)에 정리했습니다.
+목표 테이블 설계는 루트의 [DATABASE.md](../DATABASE.md)를 따릅니다. 지금 코드가 만드는 테이블(`place_detail` 등)은 `app/db.py`의 DDL 주석에 설명돼 있습니다.
 
 ---
 
@@ -259,7 +259,6 @@ TP_BATCH/
 │       ├── enrich.py     # 상세정보 보강 잡 (B-10)
 │       ├── daily.py      # 일일 배치 (B-08)
 │       └── sync_spots.py # 동기화 잡
-├── docs/SCHEMA.md        # 테이블 설계
 ├── tests/                # pytest
 ├── requirements.txt
 ├── requirements-embed.txt

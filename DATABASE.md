@@ -2,7 +2,7 @@
 
 > AI.md · BATCH.md · BACKEND.md에 흩어져 있던 테이블 정의를 하나로 합친 문서입니다.
 > **상태: 초안 — 맨 아래 [팀 합의가 필요한 것](#팀-합의가-필요한-것)을 정한 뒤 확정합니다.**
-> 확정되면 각 md의 테이블 정의는 이 문서를 참조하도록 바꿉니다. (`TP_BATCH/3 데이터베이스 설계.md`, `TP_BATCH/docs/SCHEMA.md`는 이전 버전이라 기준으로 쓰지 않습니다.)
+> 확정되면 각 md의 테이블 정의는 이 문서를 참조하도록 바꿉니다.
 
 - DB: PostgreSQL 16 + pgvector, DB 이름 `tour_db` (ROOT.md `.env` 기준)
 - 임베딩: OpenAI `text-embedding-3-small`, **1536차원** (AI.md · BATCH.md 기준)

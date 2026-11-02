@@ -24,7 +24,6 @@
 
 ```text
 TP_AI/
-├── AGENT_GUIDE.md        # 🤖 AI 에이전트 협업 및 확장 개발 가이드
 ├── README.md             # 프로젝트 개요 및 빠른 시작 가이드
 ├── .env                  # DB 접속 정보 및 환경 변수 (Git 추적 제외)
 ├── requirements.txt      # 의존성 패키지

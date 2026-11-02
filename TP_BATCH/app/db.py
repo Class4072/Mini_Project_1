@@ -3,7 +3,7 @@
 place / place_gallery_image / fetch_cursor는 기존 Kotlin 배치(TP_BATCH)가 Exposed로 만든
 테이블 구조에서 출발했다. Kotlin 배치는 제거되었으므로, 목록 API가 주는 값은 place에
 컬럼을 덧붙여 받는다(2025년 개편 후 분류코드: ldong_* / lcls_systm*). 상세 API로
-채우는 값은 별도 테이블(place_detail, place_embedding)에 둔다. 설계 설명은 docs/SCHEMA.md 참고.
+채우는 값은 별도 테이블(place_detail, place_embedding)에 둔다. 목표 설계는 루트 DATABASE.md 참고.
 """
 import logging
 from contextlib import contextmanager
