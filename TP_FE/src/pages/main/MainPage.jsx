@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ErrorBoundary, { ErrorFallback } from "../../components/ErrorBoundary/ErrorBoundary";
 import RegionMap from "../../features/map/RegionMap";
 import { REGIONS } from "../../features/trip-request/tripRequestOptions";
 import { useGenerateItinerary } from "../../features/trip-request/useGenerateItinerary";
@@ -45,11 +46,22 @@ export default function MainPage() {
           )}
         </div>
         <div className={styles.map}>
-          <RegionMap
-            regions={MAP_REGIONS}
-            selectedRegionCode={trip.state.regionCode}
-            onSelectRegion={trip.actions.selectRegion}
-          />
+          {/* 지도 렌더링 오류는 지도 자리에만 가둔다. 왼쪽 질문 패널은 계속 쓸 수 있다. */}
+          <ErrorBoundary
+            fallback={(reset) => (
+              <ErrorFallback
+                message="지도를 표시하지 못했어요"
+                onRetry={reset}
+                className={styles.mapFallback}
+              />
+            )}
+          >
+            <RegionMap
+              regions={MAP_REGIONS}
+              selectedRegionCode={trip.state.regionCode}
+              onSelectRegion={trip.actions.selectRegion}
+            />
+          </ErrorBoundary>
         </div>
       </div>
     </main>

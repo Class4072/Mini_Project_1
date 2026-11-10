@@ -18,3 +18,8 @@
   border-radius: var(--radius-2xl);
   overflow: hidden;
 }
+
+/* 지도 오류 fallback 은 지도 바탕색으로 지도 자리를 채운다. */
+.mapFallback {
+  background-color: var(--color-map-water);
+}
