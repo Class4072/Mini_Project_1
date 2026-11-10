@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import ChevronDownIcon from "../../components/icons/ChevronDownIcon";
+import { logger } from "../../utils/logger";
 import { createMap, loadMapSdk } from "./mapProvider";
 import { getLabelPosition, NATIONAL_VIEW, REGION_GEO } from "./regionGeo";
 import styles from "./RegionMap.module.css";
@@ -14,7 +15,7 @@ function toRegionLabels(regions, selectedCode) {
   return regions.flatMap(({ code, name }) => {
     const geo = REGION_GEO[code];
     if (!geo) {
-      console.warn(`[RegionMap] regionGeo 에 좌표가 없는 지역 코드: ${code} (${name})`);
+      logger.warn(`[RegionMap] regionGeo 에 좌표가 없는 지역 코드: ${code} (${name})`);
       return [];
     }
     return [{ code, name, ...getLabelPosition(geo), state: labelState(code, selectedCode) }];

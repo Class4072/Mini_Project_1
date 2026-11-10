@@ -1,5 +1,6 @@
 import { apiClient } from "../../api/client";
 import { env } from "../../config/env";
+import { logger } from "../../utils/logger";
 import { generateItineraryMock } from "./tripRequestApi.mock";
 
 // 임시 주소, 백엔드 확정 후 변경
@@ -22,7 +23,7 @@ export async function generateItinerary(requestBody) {
     const request = env.useMock ? generateItineraryMock : postGenerateItinerary;
     return await request(requestBody);
   } finally {
-    // 실제 생성 시간 측정용 (개발 모드에서만)
-    if (env.isDev) console.info(`[일정 생성] ${Math.round(performance.now() - startedAt)}ms`);
+    // 실제 생성 시간 측정용 (logger.debug 는 개발 모드에서만 출력)
+    logger.debug(`[일정 생성] ${Math.round(performance.now() - startedAt)}ms`);
   }
 }

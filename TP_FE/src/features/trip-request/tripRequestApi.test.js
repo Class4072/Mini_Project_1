@@ -64,18 +64,18 @@ describe("generateItinerary", () => {
     jest.useRealTimers();
   });
 
-  it("개발 모드에서만 걸린 시간을 console.info 로 남긴다", async () => {
-    const info = jest.spyOn(console, "info").mockImplementation(() => {});
+  it("개발 모드에서만 걸린 시간을 logger.debug 로 남긴다", async () => {
+    const debug = jest.spyOn(console, "debug").mockImplementation(() => {});
     env.useMock = false;
     apiClient.post.mockResolvedValue({ data: { itineraryId: "abc-123" } });
 
     env.isDev = false;
     await generateItinerary(REQUEST_BODY);
-    expect(info).not.toHaveBeenCalled();
+    expect(debug).not.toHaveBeenCalled();
 
     env.isDev = true;
     await generateItinerary(REQUEST_BODY);
-    expect(info).toHaveBeenCalledWith(expect.stringMatching(/^\[일정 생성\] \d+ms$/));
-    info.mockRestore();
+    expect(debug).toHaveBeenCalledWith(expect.stringMatching(/^\[DEBUG\] \[일정 생성\] \d+ms$/));
+    debug.mockRestore();
   });
 });

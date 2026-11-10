@@ -25,6 +25,15 @@ export default defineConfig([
     },
   },
   {
+    // src 에서는 console 대신 src/utils/logger.js 를 쓴다.
+    files: ["src/**/*.{js,jsx}"],
+    rules: { "no-console": "error" },
+  },
+  {
+    files: ["src/utils/logger.js", "**/*.test.{js,jsx}"],
+    rules: { "no-console": "off" },
+  },
+  {
     files: ["**/*.test.{js,jsx}", "jest.setup.js", "**/__mocks__/**", "test/**"],
     languageOptions: { globals: { ...globals.browser, ...globals.jest } },
   },
