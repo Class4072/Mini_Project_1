@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
-import Button from '../Button/Button';
-import PinIcon from '../icons/PinIcon';
-import styles from './AppHeader.module.css';
+import { Link } from "react-router-dom";
+import Button from "../Button/Button";
+import PinIcon from "../icons/PinIcon";
+import styles from "./AppHeader.module.css";
 
 export default function AppHeader() {
   return (

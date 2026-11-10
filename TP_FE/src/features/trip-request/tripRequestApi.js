@@ -1,9 +1,9 @@
-import { apiClient } from '../../api/client';
-import { env } from '../../config/env';
-import { generateItineraryMock } from './tripRequestApi.mock';
+import { apiClient } from "../../api/client";
+import { env } from "../../config/env";
+import { generateItineraryMock } from "./tripRequestApi.mock";
 
 // 임시 주소, 백엔드 확정 후 변경
-export const GENERATE_ITINERARY_PATH = '/api/v1/itinerary/itineraries/generate';
+export const GENERATE_ITINERARY_PATH = "/api/v1/itinerary/itineraries/generate";
 
 // LLM 생성이 오래 걸려 이 요청만 타임아웃을 늘린다.
 export const GENERATE_ITINERARY_TIMEOUT_MS = 120_000;

@@ -1,12 +1,12 @@
-import ChildIcon from '../../../components/icons/ChildIcon';
-import ElderIcon from '../../../components/icons/ElderIcon';
-import FriendsIcon from '../../../components/icons/FriendsIcon';
-import GroupIcon from '../../../components/icons/GroupIcon';
-import HeartIcon from '../../../components/icons/HeartIcon';
-import PersonIcon from '../../../components/icons/PersonIcon';
-import SelectableCard from '../../../components/SelectableCard/SelectableCard';
-import { COMPANIONS } from '../../../features/trip-request/tripRequestOptions';
-import styles from './CompanionStep.module.css';
+import ChildIcon from "../../../components/icons/ChildIcon";
+import ElderIcon from "../../../components/icons/ElderIcon";
+import FriendsIcon from "../../../components/icons/FriendsIcon";
+import GroupIcon from "../../../components/icons/GroupIcon";
+import HeartIcon from "../../../components/icons/HeartIcon";
+import PersonIcon from "../../../components/icons/PersonIcon";
+import SelectableCard from "../../../components/SelectableCard/SelectableCard";
+import { COMPANIONS } from "../../../features/trip-request/tripRequestOptions";
+import styles from "./CompanionStep.module.css";
 
 // 코드값이 바뀌면 여기 키도 함께 바꾼다.
 const COMPANION_ICONS = {

@@ -42,7 +42,7 @@
   font-weight: 500;
 }
 
-.theme[aria-pressed='true'] {
+.theme[aria-pressed="true"] {
   font-weight: 700;
 }
 
@@ -67,7 +67,7 @@
   font-weight: 700;
 }
 
-.twoLineOption[aria-pressed='true'] .primaryText {
+.twoLineOption[aria-pressed="true"] .primaryText {
   font-weight: 800;
 }
 

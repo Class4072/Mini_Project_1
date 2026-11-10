@@ -20,6 +20,6 @@
   color: var(--color-ink-soft);
 }
 
-.card[aria-pressed='true'] .icon {
+.card[aria-pressed="true"] .icon {
   color: var(--color-primary-ink);
 }

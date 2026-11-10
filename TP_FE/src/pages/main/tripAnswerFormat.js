@@ -1,9 +1,9 @@
-import { daysBetween } from '../../features/trip-request/date';
+import { daysBetween } from "../../features/trip-request/date";
 
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 function parse(dateString) {
-  const [year, month, day] = dateString.split('-').map(Number);
+  const [year, month, day] = dateString.split("-").map(Number);
   return { year, month, day, weekday: new Date(Date.UTC(year, month - 1, day)).getUTCDay() };
 }
 
@@ -23,7 +23,7 @@ export function formatDateWithWeekday(dateString) {
 export function formatTripLength(startDate, endDate) {
   const nights = daysBetween(startDate, endDate);
   if (nights === null || nights < 0) return null;
-  return nights === 0 ? '당일치기' : `${nights}박 ${nights + 1}일`;
+  return nights === 0 ? "당일치기" : `${nights}박 ${nights + 1}일`;
 }
 
 // '11/1~11/3 · 2박 3일' / '11/1 · 당일치기'

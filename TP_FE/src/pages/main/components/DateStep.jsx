@@ -1,6 +1,6 @@
-import DateRangeCalendar from '../../../components/DateRangeCalendar/DateRangeCalendar';
-import { formatDateWithWeekday } from '../tripAnswerFormat';
-import styles from './DateStep.module.css';
+import DateRangeCalendar from "../../../components/DateRangeCalendar/DateRangeCalendar";
+import { formatDateWithWeekday } from "../tripAnswerFormat";
+import styles from "./DateStep.module.css";
 
 function DateField({ label, value }) {
   return (

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useId, useRef } from 'react';
-import CloseIcon from '../../../components/icons/CloseIcon';
-import RegionGrid from './RegionGrid';
-import styles from './RegionPopup.module.css';
+import { useCallback, useEffect, useId, useRef } from "react";
+import CloseIcon from "../../../components/icons/CloseIcon";
+import RegionGrid from "./RegionGrid";
+import styles from "./RegionPopup.module.css";
 
 // 질문 패널 안에 뜨는 지역 바꾸기 팝업. triggerRef 는 팝업을 연 지역 칩.
 // X·Esc·지역 선택으로 닫으면 칩으로 포커스를 돌려주고, 바깥 클릭으로 닫을 때는 그대로 둔다.
@@ -20,7 +20,7 @@ export default function RegionPopup({ id, regionCode, triggerRef, onSelect, onCl
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') closeAndRestoreFocus();
+      if (event.key === "Escape") closeAndRestoreFocus();
     };
     const handleMouseDown = (event) => {
       // 칩 클릭은 칩의 onClick 이 열고 닫기를 처리한다.
@@ -28,11 +28,11 @@ export default function RegionPopup({ id, regionCode, triggerRef, onSelect, onCl
       if (triggerRef.current?.contains(event.target)) return;
       onClose();
     };
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleMouseDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleMouseDown);
     };
   }, [closeAndRestoreFocus, onClose, triggerRef]);
 

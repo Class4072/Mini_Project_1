@@ -1,6 +1,6 @@
-import { env } from '../../../config/env';
+import { env } from "../../../config/env";
 
-const SDK_URL = 'https://dapi.kakao.com/v2/maps/sdk.js';
+const SDK_URL = "https://dapi.kakao.com/v2/maps/sdk.js";
 
 let sdkPromise = null;
 
@@ -11,20 +11,20 @@ export function loadMapSdk() {
   let script = null;
   sdkPromise = new Promise((resolve, reject) => {
     if (!env.kakaoMapKey) {
-      reject(new Error('VITE_KAKAO_MAP_API_KEY 가 설정되지 않았습니다.'));
+      reject(new Error("VITE_KAKAO_MAP_API_KEY 가 설정되지 않았습니다."));
       return;
     }
-    script = document.createElement('script');
+    script = document.createElement("script");
     script.src = `${SDK_URL}?appkey=${encodeURIComponent(env.kakaoMapKey)}&autoload=false`;
     script.async = true;
     script.onload = () => {
       if (!window.kakao?.maps) {
-        reject(new Error('카카오맵 SDK 를 초기화하지 못했습니다.'));
+        reject(new Error("카카오맵 SDK 를 초기화하지 못했습니다."));
         return;
       }
       window.kakao.maps.load(() => resolve());
     };
-    script.onerror = () => reject(new Error('카카오맵 SDK 를 불러오지 못했습니다.'));
+    script.onerror = () => reject(new Error("카카오맵 SDK 를 불러오지 못했습니다."));
     document.head.appendChild(script);
   }).catch((error) => {
     script?.remove();

@@ -1,4 +1,4 @@
-import { renderRegionLabels } from './regionLabels';
+import { renderRegionLabels } from "./regionLabels";
 
 const ZOOM_ANIMATION_MS = 300;
 const noop = () => {};
@@ -39,9 +39,9 @@ export function createMap(container, { center, level }) {
         cancelPendingZoom();
         zoom();
       };
-      maps.event.addListener(map, 'idle', handleIdle);
+      maps.event.addListener(map, "idle", handleIdle);
       cancelPendingZoom = () => {
-        maps.event.removeListener(map, 'idle', handleIdle);
+        maps.event.removeListener(map, "idle", handleIdle);
         cancelPendingZoom = noop;
       };
       map.panTo(target);

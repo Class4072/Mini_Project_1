@@ -1,5 +1,5 @@
-import Button from '../../../components/Button/Button';
-import styles from './QuestionPanel.module.css';
+import Button from "../../../components/Button/Button";
+import styles from "./QuestionPanel.module.css";
 
 // 질문 단계 공통 틀. onPrev 가 없으면 이전 버튼을 숨긴다.
 // footer 를 주면 기본 아래쪽(강조 문구 + 이전·다음) 대신 그것을 보여준다. overlay 는 패널 기준 팝업 자리.

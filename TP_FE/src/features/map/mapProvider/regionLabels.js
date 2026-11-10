@@ -1,23 +1,23 @@
-import styles from './RegionLabel.module.css';
+import styles from "./RegionLabel.module.css";
 
 function createLabelElement(label, onClick) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = [styles.label, styles[label.state]].filter(Boolean).join(' ');
-  button.setAttribute('aria-label', `${label.name} 선택`);
-  button.setAttribute('aria-pressed', String(label.state === 'selected'));
-  button.disabled = label.state === 'dimmed';
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = [styles.label, styles[label.state]].filter(Boolean).join(" ");
+  button.setAttribute("aria-label", `${label.name} 선택`);
+  button.setAttribute("aria-pressed", String(label.state === "selected"));
+  button.disabled = label.state === "dimmed";
 
-  const dot = document.createElement('span');
+  const dot = document.createElement("span");
   dot.className = styles.dot;
-  dot.setAttribute('aria-hidden', 'true');
-  const name = document.createElement('span');
+  dot.setAttribute("aria-hidden", "true");
+  const name = document.createElement("span");
   name.textContent = label.name;
   button.append(dot, name);
 
   const handleClick = () => onClick?.(label.code);
-  button.addEventListener('click', handleClick);
-  return { button, removeListener: () => button.removeEventListener('click', handleClick) };
+  button.addEventListener("click", handleClick);
+  return { button, removeListener: () => button.removeEventListener("click", handleClick) };
 }
 
 // 지역 라벨을 CustomOverlay 로 그리고, 모두 지우는 함수를 돌려준다.
@@ -31,7 +31,7 @@ export function renderRegionLabels(maps, map, labels, { onClick } = {}) {
       content: button,
       xAnchor: 0.5,
       yAnchor: 0.5,
-      zIndex: label.state === 'selected' ? 2 : 1,
+      zIndex: label.state === "selected" ? 2 : 1,
       clickable: true,
     });
     return { overlay, removeListener };

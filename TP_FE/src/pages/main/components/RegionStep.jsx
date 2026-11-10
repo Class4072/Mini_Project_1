@@ -1,5 +1,5 @@
-import RegionGrid from './RegionGrid';
-import styles from './RegionStep.module.css';
+import RegionGrid from "./RegionGrid";
+import styles from "./RegionStep.module.css";
 
 export default function RegionStep({ regionCode, onSelect }) {
   return (

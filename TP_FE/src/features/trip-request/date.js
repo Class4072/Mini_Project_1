@@ -8,7 +8,7 @@ export function getTodayKST(now = new Date()) {
 }
 
 function toUtcTime(dateString) {
-  const match = DATE_PATTERN.exec(dateString ?? '');
+  const match = DATE_PATTERN.exec(dateString ?? "");
   if (!match) return null;
   const [, y, m, d] = match.map(Number);
   const time = Date.UTC(y, m - 1, d);

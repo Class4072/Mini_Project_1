@@ -1,7 +1,7 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import AppLayout from './components/layout/AppLayout';
-import ItineraryPage from './pages/itinerary/ItineraryPage';
-import MainPage from './pages/main/MainPage';
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import AppLayout from "./components/layout/AppLayout";
+import ItineraryPage from "./pages/itinerary/ItineraryPage";
+import MainPage from "./pages/main/MainPage";
 
 export default function App() {
   return (

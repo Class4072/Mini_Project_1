@@ -1,20 +1,20 @@
-import Chip from '../../../components/Chip/Chip';
-import PencilIcon from '../../../components/icons/PencilIcon';
+import Chip from "../../../components/Chip/Chip";
+import PencilIcon from "../../../components/icons/PencilIcon";
 import {
   COMPANIONS,
   REGIONS,
   SOLO,
   TRANSPORTS,
-} from '../../../features/trip-request/tripRequestOptions';
-import { formatDateRange } from '../tripAnswerFormat';
-import styles from './AnsweredChips.module.css';
+} from "../../../features/trip-request/tripRequestOptions";
+import { formatDateRange } from "../tripAnswerFormat";
+import styles from "./AnsweredChips.module.css";
 
 const labelOf = (options, value) => options.find((o) => o.value === value)?.label;
 
 function companionLabel(state, answeredSteps) {
   if (state.companionType === SOLO) return labelOf(COMPANIONS, SOLO);
   const label = labelOf(COMPANIONS, state.companionType);
-  return answeredSteps.includes('travelerCount') ? `${label} ${state.travelerCount}명` : label;
+  return answeredSteps.includes("travelerCount") ? `${label} ${state.travelerCount}명` : label;
 }
 
 // 현재 단계보다 앞의 단계(= 답한 단계)만 순서대로 칩으로 보여준다.
@@ -31,38 +31,38 @@ export default function AnsweredChips({
   const answeredSteps = visibleSteps.slice(0, visibleSteps.indexOf(state.currentStep));
 
   const chips = [];
-  if (answeredSteps.includes('region')) {
+  if (answeredSteps.includes("region")) {
     chips.push({
-      key: 'region',
+      key: "region",
       label: labelOf(REGIONS, state.regionCode),
       props: {
         ref: regionChipRef,
-        'aria-haspopup': 'dialog',
-        'aria-expanded': isRegionPopupOpen,
-        'aria-controls': isRegionPopupOpen ? regionPopupId : undefined,
+        "aria-haspopup": "dialog",
+        "aria-expanded": isRegionPopupOpen,
+        "aria-controls": isRegionPopupOpen ? regionPopupId : undefined,
         onClick: onRegionClick,
       },
     });
   }
-  if (answeredSteps.includes('date')) {
+  if (answeredSteps.includes("date")) {
     chips.push({
-      key: 'date',
+      key: "date",
       label: formatDateRange(state.startDate, state.endDate),
-      props: { onClick: () => onGoToStep('date') },
+      props: { onClick: () => onGoToStep("date") },
     });
   }
-  if (answeredSteps.includes('companion')) {
+  if (answeredSteps.includes("companion")) {
     chips.push({
-      key: 'companion',
+      key: "companion",
       label: companionLabel(state, answeredSteps),
-      props: { onClick: () => onGoToStep('companion') },
+      props: { onClick: () => onGoToStep("companion") },
     });
   }
-  if (answeredSteps.includes('transport')) {
+  if (answeredSteps.includes("transport")) {
     chips.push({
-      key: 'transport',
+      key: "transport",
       label: labelOf(TRANSPORTS, state.transport),
-      props: { onClick: () => onGoToStep('transport') },
+      props: { onClick: () => onGoToStep("transport") },
     });
   }
 

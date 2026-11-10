@@ -26,7 +26,7 @@
   color: var(--color-ink-soft);
 }
 
-.card[aria-pressed='true'] .iconBox {
+.card[aria-pressed="true"] .iconBox {
   background-color: var(--color-surface);
   color: var(--color-primary-ink);
 }
@@ -42,7 +42,7 @@
   font-weight: 700;
 }
 
-.card[aria-pressed='true'] .name {
+.card[aria-pressed="true"] .name {
   font-weight: 800;
 }
 

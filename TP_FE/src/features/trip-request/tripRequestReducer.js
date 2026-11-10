@@ -4,8 +4,8 @@ import {
   MAX_THEMES,
   REQUIRED_STEPS,
   SOLO,
-} from './tripRequestOptions';
-import { canProceed, getVisibleSteps } from './tripRequestSelectors';
+} from "./tripRequestOptions";
+import { canProceed, getVisibleSteps } from "./tripRequestSelectors";
 
 export const initialTripRequestState = {
   regionCode: null,
@@ -17,22 +17,22 @@ export const initialTripRequestState = {
   themes: [],
   placesPerDay: DEFAULT_PLACES_PER_DAY,
   startTime: DEFAULT_START_TIME,
-  currentStep: 'region',
+  currentStep: "region",
 };
 
 export const TRIP_REQUEST_ACTIONS = {
-  SELECT_REGION: 'SELECT_REGION',
-  SET_DATES: 'SET_DATES',
-  SELECT_COMPANION: 'SELECT_COMPANION',
-  SET_TRAVELER_COUNT: 'SET_TRAVELER_COUNT',
-  SELECT_TRANSPORT: 'SELECT_TRANSPORT',
-  TOGGLE_THEME: 'TOGGLE_THEME',
-  CLEAR_THEMES: 'CLEAR_THEMES',
-  SET_PLACES_PER_DAY: 'SET_PLACES_PER_DAY',
-  SET_START_TIME: 'SET_START_TIME',
-  NEXT: 'NEXT',
-  PREV: 'PREV',
-  GO_TO_STEP: 'GO_TO_STEP',
+  SELECT_REGION: "SELECT_REGION",
+  SET_DATES: "SET_DATES",
+  SELECT_COMPANION: "SELECT_COMPANION",
+  SET_TRAVELER_COUNT: "SET_TRAVELER_COUNT",
+  SELECT_TRANSPORT: "SELECT_TRANSPORT",
+  TOGGLE_THEME: "TOGGLE_THEME",
+  CLEAR_THEMES: "CLEAR_THEMES",
+  SET_PLACES_PER_DAY: "SET_PLACES_PER_DAY",
+  SET_START_TIME: "SET_START_TIME",
+  NEXT: "NEXT",
+  PREV: "PREV",
+  GO_TO_STEP: "GO_TO_STEP",
 };
 
 const A = TRIP_REQUEST_ACTIONS;
@@ -69,7 +69,7 @@ export function tripRequestReducer(state, action) {
         ...state,
         regionCode: action.regionCode,
         // 첫 화면에서만 다음 단계로 이동, 그 외(지역 칩 팝업)에서는 단계 유지
-        currentStep: state.currentStep === 'region' ? 'date' : state.currentStep,
+        currentStep: state.currentStep === "region" ? "date" : state.currentStep,
       };
     case A.SET_DATES:
       return { ...state, startDate: action.startDate, endDate: action.endDate };
@@ -93,7 +93,7 @@ export function tripRequestReducer(state, action) {
       return moveBy(state, 1);
     case A.PREV:
       // date 이전(region)으로는 돌아가지 않는다.
-      if (state.currentStep === 'date' || state.currentStep === 'region') return state;
+      if (state.currentStep === "date" || state.currentStep === "region") return state;
       return moveBy(state, -1);
     case A.GO_TO_STEP:
       if (!REQUIRED_STEPS.includes(action.step)) return state;

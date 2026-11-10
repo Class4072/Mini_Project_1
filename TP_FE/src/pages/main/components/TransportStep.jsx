@@ -1,9 +1,9 @@
-import BusIcon from '../../../components/icons/BusIcon';
-import CarIcon from '../../../components/icons/CarIcon';
-import WalkIcon from '../../../components/icons/WalkIcon';
-import SelectableCard from '../../../components/SelectableCard/SelectableCard';
-import { TRANSPORTS } from '../../../features/trip-request/tripRequestOptions';
-import styles from './TransportStep.module.css';
+import BusIcon from "../../../components/icons/BusIcon";
+import CarIcon from "../../../components/icons/CarIcon";
+import WalkIcon from "../../../components/icons/WalkIcon";
+import SelectableCard from "../../../components/SelectableCard/SelectableCard";
+import { TRANSPORTS } from "../../../features/trip-request/tripRequestOptions";
+import styles from "./TransportStep.module.css";
 
 // 코드값이 바뀌면 여기 키도 함께 바꾼다.
 const TRANSPORT_ICONS = {

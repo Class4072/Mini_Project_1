@@ -1,4 +1,4 @@
-import { daysBetween, getTodayKST, isValidDateString } from './date';
+import { daysBetween, getTodayKST, isValidDateString } from "./date";
 import {
   MAX_DAYS_AHEAD,
   MAX_TRAVELERS,
@@ -6,7 +6,7 @@ import {
   REQUIRED_STEPS,
   SOLO,
   STEPS,
-} from './tripRequestOptions';
+} from "./tripRequestOptions";
 
 // limits 는 테스트에서 제약 상수를 바꿔 검증하기 위한 인자. 기본값은 tripRequestOptions 상수.
 export function isDateRangeValid(
@@ -30,15 +30,15 @@ export function isTravelerCountValid(travelerCount, { maxTravelers = MAX_TRAVELE
 
 export function isStepValid(state, step, limits) {
   switch (step) {
-    case 'region':
+    case "region":
       return state.regionCode !== null;
-    case 'date':
+    case "date":
       return isDateRangeValid(state, limits);
-    case 'companion':
+    case "companion":
       return state.companionType !== null;
-    case 'travelerCount':
+    case "travelerCount":
       return state.companionType === SOLO || isTravelerCountValid(state.travelerCount, limits);
-    case 'transport':
+    case "transport":
       return state.transport !== null;
     default:
       return true;
@@ -57,7 +57,7 @@ export function canSubmit(state, limits) {
 
 // SOLO 면 travelerCount 단계를 건너뛴다.
 export function getVisibleSteps(state) {
-  return state.companionType === SOLO ? STEPS.filter((s) => s !== 'travelerCount') : STEPS;
+  return state.companionType === SOLO ? STEPS.filter((s) => s !== "travelerCount") : STEPS;
 }
 
 export function getVisibleRequiredSteps(state) {
@@ -68,7 +68,7 @@ export function getVisibleRequiredSteps(state) {
 export function getProgress(state) {
   const requiredSteps = getVisibleRequiredSteps(state);
   const total = requiredSteps.length;
-  if (state.currentStep === 'region') return null;
-  if (state.currentStep === 'optional') return { current: total, total };
+  if (state.currentStep === "region") return null;
+  if (state.currentStep === "optional") return { current: total, total };
   return { current: requiredSteps.indexOf(state.currentStep) + 1, total };
 }

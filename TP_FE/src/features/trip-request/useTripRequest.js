@@ -1,12 +1,12 @@
-import { useMemo, useReducer } from 'react';
-import { getTodayKST } from './date';
-import { toTripRequest } from './toTripRequest';
+import { useMemo, useReducer } from "react";
+import { getTodayKST } from "./date";
+import { toTripRequest } from "./toTripRequest";
 import {
   initialTripRequestState,
   TRIP_REQUEST_ACTIONS as A,
   tripRequestReducer,
-} from './tripRequestReducer';
-import { canProceed, canSubmit, getProgress, getVisibleSteps } from './tripRequestSelectors';
+} from "./tripRequestReducer";
+import { canProceed, canSubmit, getProgress, getVisibleSteps } from "./tripRequestSelectors";
 
 // getToday 는 테스트에서 오늘 날짜를 고정하기 위한 주입 지점.
 export function useTripRequest({

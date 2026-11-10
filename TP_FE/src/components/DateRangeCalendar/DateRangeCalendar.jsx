@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import ChevronLeftIcon from '../icons/ChevronLeftIcon';
-import ChevronRightIcon from '../icons/ChevronRightIcon';
-import styles from './DateRangeCalendar.module.css';
+import { useState } from "react";
+import ChevronLeftIcon from "../icons/ChevronLeftIcon";
+import ChevronRightIcon from "../icons/ChevronRightIcon";
+import styles from "./DateRangeCalendar.module.css";
 
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-const pad = (n) => String(n).padStart(2, '0');
+const pad = (n) => String(n).padStart(2, "0");
 const toDateString = (year, month, day) => `${year}-${pad(month)}-${pad(day)}`;
 
 function parseMonth(dateString) {
-  const [year, month] = dateString.split('-').map(Number);
+  const [year, month] = dateString.split("-").map(Number);
   return { year, month };
 }
 
@@ -82,7 +82,7 @@ export default function DateRangeCalendar({ startDate, endDate, minDate, onChang
           const isInRange = startDate && endDate && date > startDate && date < endDate;
           const className = [styles.day, isSelected && styles.selected, isInRange && styles.inRange]
             .filter(Boolean)
-            .join(' ');
+            .join(" ");
 
           return (
             <button

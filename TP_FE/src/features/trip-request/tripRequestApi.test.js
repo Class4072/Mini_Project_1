@@ -1,17 +1,17 @@
-import { apiClient } from '../../api/client';
-import { env } from '../../config/env';
+import { apiClient } from "../../api/client";
+import { env } from "../../config/env";
 import {
   GENERATE_ITINERARY_PATH,
   GENERATE_ITINERARY_TIMEOUT_MS,
   generateItinerary,
-} from './tripRequestApi';
-import { generateItineraryMock, MOCK_DELAY_MS } from './tripRequestApi.mock';
+} from "./tripRequestApi";
+import { generateItineraryMock, MOCK_DELAY_MS } from "./tripRequestApi.mock";
 
-jest.mock('../../api/client', () => ({ apiClient: { post: jest.fn() } }));
+jest.mock("../../api/client", () => ({ apiClient: { post: jest.fn() } }));
 
-const REQUEST_BODY = { regionCodes: ['6'], startDate: '2026-11-01', endDate: '2026-11-03' };
+const REQUEST_BODY = { regionCodes: ["6"], startDate: "2026-11-01", endDate: "2026-11-03" };
 
-describe('generateItineraryMock', () => {
+describe("generateItineraryMock", () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
@@ -28,32 +28,32 @@ describe('generateItineraryMock', () => {
   });
 });
 
-describe('generateItinerary', () => {
+describe("generateItinerary", () => {
   const original = { ...env };
 
   beforeEach(() => jest.clearAllMocks());
   afterEach(() => Object.assign(env, original));
 
-  it('useMock 이 false 면 정해진 주소로 요청 본문을 POST 하고, 타임아웃은 120초다', async () => {
+  it("useMock 이 false 면 정해진 주소로 요청 본문을 POST 하고, 타임아웃은 120초다", async () => {
     env.useMock = false;
-    apiClient.post.mockResolvedValue({ data: { itineraryId: 'abc-123' } });
+    apiClient.post.mockResolvedValue({ data: { itineraryId: "abc-123" } });
 
-    await expect(generateItinerary(REQUEST_BODY)).resolves.toEqual({ itineraryId: 'abc-123' });
-    expect(GENERATE_ITINERARY_PATH).toBe('/api/v1/itinerary/itineraries/generate');
+    await expect(generateItinerary(REQUEST_BODY)).resolves.toEqual({ itineraryId: "abc-123" });
+    expect(GENERATE_ITINERARY_PATH).toBe("/api/v1/itinerary/itineraries/generate");
     expect(apiClient.post).toHaveBeenCalledWith(GENERATE_ITINERARY_PATH, REQUEST_BODY, {
       timeout: GENERATE_ITINERARY_TIMEOUT_MS,
     });
     expect(GENERATE_ITINERARY_TIMEOUT_MS).toBe(120000);
   });
 
-  it('요청이 실패하면 그 오류를 그대로 던진다', async () => {
+  it("요청이 실패하면 그 오류를 그대로 던진다", async () => {
     env.useMock = false;
-    const error = Object.assign(new Error('timeout'), { code: 'ECONNABORTED' });
+    const error = Object.assign(new Error("timeout"), { code: "ECONNABORTED" });
     apiClient.post.mockRejectedValue(error);
     await expect(generateItinerary(REQUEST_BODY)).rejects.toBe(error);
   });
 
-  it('useMock 이 true 면 실제 요청 없이 가짜 응답을 돌려준다', async () => {
+  it("useMock 이 true 면 실제 요청 없이 가짜 응답을 돌려준다", async () => {
     jest.useFakeTimers();
     env.useMock = true;
     const promise = generateItinerary(REQUEST_BODY);
@@ -64,10 +64,10 @@ describe('generateItinerary', () => {
     jest.useRealTimers();
   });
 
-  it('개발 모드에서만 걸린 시간을 console.info 로 남긴다', async () => {
-    const info = jest.spyOn(console, 'info').mockImplementation(() => {});
+  it("개발 모드에서만 걸린 시간을 console.info 로 남긴다", async () => {
+    const info = jest.spyOn(console, "info").mockImplementation(() => {});
     env.useMock = false;
-    apiClient.post.mockResolvedValue({ data: { itineraryId: 'abc-123' } });
+    apiClient.post.mockResolvedValue({ data: { itineraryId: "abc-123" } });
 
     env.isDev = false;
     await generateItinerary(REQUEST_BODY);

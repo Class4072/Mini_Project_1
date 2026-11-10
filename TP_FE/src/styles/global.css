@@ -33,7 +33,7 @@
   --shadow-md: 0 4px 12px rgba(29, 27, 23, 0.08), 0 12px 32px rgba(29, 27, 23, 0.08);
 
   /* 폰트 */
-  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', sans-serif;
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", sans-serif;
 
   font-family: var(--font-sans);
   color: var(--color-ink);

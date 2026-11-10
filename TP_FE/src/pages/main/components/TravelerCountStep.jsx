@@ -1,11 +1,11 @@
-import MinusIcon from '../../../components/icons/MinusIcon';
-import PlusIcon from '../../../components/icons/PlusIcon';
-import SelectableCard from '../../../components/SelectableCard/SelectableCard';
+import MinusIcon from "../../../components/icons/MinusIcon";
+import PlusIcon from "../../../components/icons/PlusIcon";
+import SelectableCard from "../../../components/SelectableCard/SelectableCard";
 import {
   MAX_TRAVELERS,
   TRAVELER_COUNT_PRESETS,
-} from '../../../features/trip-request/tripRequestOptions';
-import styles from './TravelerCountStep.module.css';
+} from "../../../features/trip-request/tripRequestOptions";
+import styles from "./TravelerCountStep.module.css";
 
 // 마지막 프리셋("6명 이상")부터는 아래 조절 박스로 인원을 맞춘다.
 const STEPPER_MIN = TRAVELER_COUNT_PRESETS.at(-1).value;
@@ -15,7 +15,7 @@ export default function TravelerCountStep({ value, onChange, maxTravelers = MAX_
   const isStepperActive = value >= STEPPER_MIN;
   const stepperClassName = [styles.stepper, !isStepperActive && styles.inactive]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   return (
     <div className={styles.travelerCount}>

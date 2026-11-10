@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import ChevronDownIcon from '../../components/icons/ChevronDownIcon';
-import { createMap, loadMapSdk } from './mapProvider';
-import { getLabelPosition, NATIONAL_VIEW, REGION_GEO } from './regionGeo';
-import styles from './RegionMap.module.css';
+import { useEffect, useRef, useState } from "react";
+import ChevronDownIcon from "../../components/icons/ChevronDownIcon";
+import { createMap, loadMapSdk } from "./mapProvider";
+import { getLabelPosition, NATIONAL_VIEW, REGION_GEO } from "./regionGeo";
+import styles from "./RegionMap.module.css";
 
 function labelState(code, selectedCode) {
-  if (!selectedCode) return 'default';
-  return code === selectedCode ? 'selected' : 'dimmed';
+  if (!selectedCode) return "default";
+  return code === selectedCode ? "selected" : "dimmed";
 }
 
 // regions(코드·이름)와 regionGeo 좌표를 코드로 합친다. 좌표가 없는 지역은 라벨을 그리지 않는다.
@@ -25,11 +25,11 @@ function toRegionLabels(regions, selectedCode) {
 export default function RegionMap({ regions, selectedRegionCode, onSelectRegion }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
-  const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
+  const [status, setStatus] = useState("loading"); // 'loading' | 'ready' | 'error'
   const region = regions.find((r) => r.code === selectedRegionCode);
   // 전국 보기(지역 미선택)에서 화면 밖에 있는 지역의 바로가기. 카카오 오버레이가 아닌 React 요소로 겹쳐 그린다.
   const shortcuts =
-    status === 'ready' && !selectedRegionCode
+    status === "ready" && !selectedRegionCode
       ? regions.filter((r) => REGION_GEO[r.code]?.shortcut)
       : [];
 
@@ -39,10 +39,10 @@ export default function RegionMap({ regions, selectedRegionCode, onSelectRegion 
       .then(() => {
         if (cancelled) return;
         mapRef.current = createMap(containerRef.current, NATIONAL_VIEW);
-        setStatus('ready');
+        setStatus("ready");
       })
       .catch(() => {
-        if (!cancelled) setStatus('error');
+        if (!cancelled) setStatus("error");
       });
 
     return () => {
@@ -53,7 +53,7 @@ export default function RegionMap({ regions, selectedRegionCode, onSelectRegion 
   }, []);
 
   useEffect(() => {
-    if (status !== 'ready') return;
+    if (status !== "ready") return;
     const map = mapRef.current;
     map.setRegionLabels(toRegionLabels(regions, selectedRegionCode), { onClick: onSelectRegion });
 
@@ -65,8 +65,8 @@ export default function RegionMap({ regions, selectedRegionCode, onSelectRegion 
     <section className={styles.map} aria-label="지도">
       <div ref={containerRef} className={styles.canvas} />
 
-      {status === 'loading' && <p className={styles.message}>지도를 불러오는 중이에요</p>}
-      {status === 'error' && (
+      {status === "loading" && <p className={styles.message}>지도를 불러오는 중이에요</p>}
+      {status === "error" && (
         <p className={styles.message}>지도를 불러오지 못했어요. 왼쪽 목록에서 지역을 골라주세요.</p>
       )}
 

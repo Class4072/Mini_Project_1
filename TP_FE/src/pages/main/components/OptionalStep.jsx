@@ -1,12 +1,12 @@
-import { useId } from 'react';
-import SelectableCard from '../../../components/SelectableCard/SelectableCard';
+import { useId } from "react";
+import SelectableCard from "../../../components/SelectableCard/SelectableCard";
 import {
   MAX_THEMES,
   PLACES_PER_DAY,
   START_TIMES,
   THEMES,
-} from '../../../features/trip-request/tripRequestOptions';
-import styles from './OptionalStep.module.css';
+} from "../../../features/trip-request/tripRequestOptions";
+import styles from "./OptionalStep.module.css";
 
 function OptionGroup({ title, hint, children }) {
   const titleId = useId();
