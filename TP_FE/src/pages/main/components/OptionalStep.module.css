@@ -1,0 +1,78 @@
+.optional {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--color-ink-soft);
+}
+
+.themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.theme {
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.theme[aria-pressed='true'] {
+  font-weight: 700;
+}
+
+.twoLineOptions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.twoLineOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 60px;
+  border-radius: var(--radius-md);
+}
+
+.primaryText {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.twoLineOption[aria-pressed='true'] .primaryText {
+  font-weight: 800;
+}
+
+.secondaryText {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-ink-soft);
+}

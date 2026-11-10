@@ -1,0 +1,29 @@
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bars {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+}
+
+.bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background-color: var(--color-line);
+}
+
+.filled {
+  background-color: var(--color-primary);
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+}

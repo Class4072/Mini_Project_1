@@ -1,0 +1,55 @@
+:root {
+  color-scheme: light;
+
+  /* 색상 */
+  --color-bg: #f7f6f2;
+  --color-surface: #ffffff;
+  --color-surface-sub: #f3f1ec;
+  --color-ink: #1d1b17;
+  --color-ink-soft: #625d54;
+  --color-line: #e5e1d8;
+  --color-line-strong: #d3cdc1;
+  --color-primary: #f2b01e;
+  --color-primary-hover: #e5a512;
+  --color-on-primary: #241a04;
+  --color-primary-soft: #fdf1d2;
+  --color-primary-ink: #8a5a00;
+  --color-secondary: #3949ab;
+  --color-map-water: #dceaf3;
+  --color-sunday: #b4442b;
+  --color-danger: #b3261e;
+
+  /* 모서리 */
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-control: 14px;
+  --radius-lg: 16px;
+  --radius-popover: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 28px;
+
+  /* 그림자 */
+  --shadow-sm: 0 1px 2px rgba(29, 27, 23, 0.06), 0 1px 3px rgba(29, 27, 23, 0.08);
+  --shadow-md: 0 4px 12px rgba(29, 27, 23, 0.08), 0 12px 32px rgba(29, 27, 23, 0.08);
+
+  /* 폰트 */
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', sans-serif;
+
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background-color: var(--color-bg);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+}

@@ -1,0 +1,75 @@
+.travelerCount {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.presets {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.preset {
+  height: 64px;
+  border-radius: var(--radius-control);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px dashed var(--color-line-strong);
+  border-radius: var(--radius-control);
+  background-color: var(--color-bg);
+}
+
+.inactive {
+  opacity: 0.45;
+}
+
+.stepperText {
+  font-size: 14px;
+  color: var(--color-ink-soft);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stepperButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.stepperButton:disabled {
+  color: var(--color-line-strong);
+  cursor: not-allowed;
+}
+
+.stepperButton:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+.count {
+  min-width: 44px;
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+}

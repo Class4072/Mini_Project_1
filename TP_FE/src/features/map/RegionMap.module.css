@@ -1,0 +1,91 @@
+.map {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-map-water);
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 32px;
+  background-color: var(--color-map-water);
+  color: var(--color-ink-soft);
+  text-align: center;
+}
+
+.regionCard {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 10;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.regionName {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+/* 바로가기: mapProvider/RegionLabel.module.css 의 default 라벨 모양과 맞춘다. */
+.shortcuts {
+  position: absolute;
+  bottom: 56px;
+  left: 20px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.shortcut:hover {
+  border-color: var(--color-primary);
+}
+
+.shortcut:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+.shortcutDot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--color-secondary);
+}
+
+.shortcutArrow {
+  color: var(--color-ink-soft);
+}
