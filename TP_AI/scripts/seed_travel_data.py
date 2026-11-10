@@ -167,6 +167,60 @@ SAMPLE_SPOTS = [
         }
     },
     {
+        "name": "SEA LIFE 부산아쿠아리움",
+        "region": "부산광역시 해운대구",
+        "address": "부산광역시 해운대구 해운대해변로 266",
+        "category": "실내/문화",
+        "latitude": 35.1593,
+        "longitude": 129.1611,
+        "description": "250여 종 1만여 마리의 해양 생물을 관람할 수 있는 초대형 실내 수족관입니다. 비 오는 날이나 쌀쌀한 날씨에 비를 맞지 않고 쾌적하게 관람할 수 있습니다.",
+        "metadata": {
+            "companion_types": ["가족", "아이동반", "커플", "친구"],
+            "best_seasons": ["사계절"],
+            "weather_suitability": ["비오는날_실내", "맑음"],
+            "is_indoor": True,
+            "tags": ["아쿠아리움", "실내데이트", "가족여행", "비오는날", "해양생물"],
+            "estimated_stay_min": 120,
+            "cost_level": "보통"
+        }
+    },
+    {
+        "name": "해운대 기와집 대구탕",
+        "region": "부산광역시 해운대구",
+        "address": "부산광역시 해운대구 달맞이길104번길 46",
+        "category": "맛집",
+        "latitude": 35.1612,
+        "longitude": 129.1752,
+        "description": "시원하고 담백한 맑은 대구탕으로 유명한 부산의 대표 노포 미식 명소입니다. 비 오거나 쌀쌀한 날 따뜻한 국물 요리로 몸을 녹이기 좋습니다.",
+        "metadata": {
+            "companion_types": ["친구", "가족", "혼자", "커플"],
+            "best_seasons": ["사계절"],
+            "weather_suitability": ["비오는날_실내", "맑음"],
+            "is_indoor": True,
+            "tags": ["대구탕", "국물요리", "해장", "노포맛집", "점심추천"],
+            "estimated_stay_min": 60,
+            "cost_level": "보통"
+        }
+    },
+    {
+        "name": "달맞이길 랑데자뷰 카페",
+        "region": "부산광역시 해운대구",
+        "address": "부산광역시 해운대구 달맞이길 117번가길 175",
+        "category": "카페",
+        "latitude": 35.1585,
+        "longitude": 129.1820,
+        "description": "통창 너머로 시원하게 펼쳐지는 해운대 바다를 바라보며 커피와 디저트를 즐길 수 있는 감성 오션뷰 카페입니다. 비 내리는 바다 풍경을 감상하기 제격입니다.",
+        "metadata": {
+            "companion_types": ["커플", "친구", "혼자"],
+            "best_seasons": ["사계절"],
+            "weather_suitability": ["비오는날_실내", "맑음"],
+            "is_indoor": True,
+            "tags": ["오션뷰", "감성카페", "디저트", "통창뷰", "포토존"],
+            "estimated_stay_min": 90,
+            "cost_level": "보통"
+        }
+    },
+    {
         "name": "흰여울문화마을",
         "region": "부산광역시 영도구",
         "address": "부산광역시 영도구 영선동4가 1044-6",
@@ -181,6 +235,24 @@ SAMPLE_SPOTS = [
             "tags": ["골목투어", "감성마을", "포토존", "바다조망", "산책"],
             "estimated_stay_min": 100,
             "cost_level": "무료"
+        }
+    },
+    {
+        "name": "자갈치시장 신동아수산물센터",
+        "region": "부산광역시 중구",
+        "address": "부산광역시 중구 자갈치로 42",
+        "category": "맛집",
+        "latitude": 35.0970,
+        "longitude": 129.0305,
+        "description": "살아있는 활어회와 숯불 꼼장어구이를 맛볼 수 있는 대한민국 최대 수산시장입니다. 부산 특유의 활기와 정겨운 인심을 온몸으로 느낄 수 있는 필수 저녁 코스입니다.",
+        "metadata": {
+            "companion_types": ["친구", "가족", "커플"],
+            "best_seasons": ["사계절"],
+            "weather_suitability": ["맑음", "비오는날_실내"],
+            "is_indoor": True,
+            "tags": ["수산시장", "활어회", "꼼장어", "저녁식사", "해산물"],
+            "estimated_stay_min": 90,
+            "cost_level": "보통"
         }
     },
 
