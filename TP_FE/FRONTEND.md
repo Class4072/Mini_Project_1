@@ -112,6 +112,8 @@ TP_FE/
 
 ## 8. API 통신
 
+> 백엔드 구현 확정 후 적용한다. 현재 코드는 임시 방식(응답 포장 언래핑 없음, 일정 생성 주소 `/itinerary/itineraries/generate`, 기본 주소 처리 포함)이며, 확정 전에는 API 관련 코드를 이 장에 맞춰 고치지 않는다.
+
 - 모든 요청은 `src/api/client.js` 의 `apiClient` 를 사용한다
 - 백엔드는 `ApiResponse<T>`(`success`, `code`, `message`, `data`, `timestamp`)로 감싸서 응답한다. `apiClient` 가 `data` 만 꺼내 반환하고, `success: false` 나 통신 오류는 `message` 를 담은 Error 로 바꾼다
 - 응답 필드는 **camelCase 그대로** 쓴다. 이름 변환 레이어를 만들지 않는다
