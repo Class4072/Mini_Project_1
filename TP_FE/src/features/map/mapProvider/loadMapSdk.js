@@ -11,7 +11,7 @@ export function loadMapSdk() {
   let script = null;
   sdkPromise = new Promise((resolve, reject) => {
     if (!env.kakaoMapKey) {
-      reject(new Error('VITE_KAKAO_MAP_KEY 가 설정되지 않았습니다.'));
+      reject(new Error('VITE_KAKAO_MAP_API_KEY 가 설정되지 않았습니다.'));
       return;
     }
     script = document.createElement('script');

@@ -57,7 +57,7 @@ describe('loadMapSdk', () => {
       jest.doMock('../../../config/env', () => ({ env: { kakaoMapKey: '' } }));
       ({ loadMapSdk } = await import('./loadMapSdk'));
     });
-    await expect(loadMapSdk()).rejects.toThrow('VITE_KAKAO_MAP_KEY');
+    await expect(loadMapSdk()).rejects.toThrow('VITE_KAKAO_MAP_API_KEY');
     expect(sdkScripts()).toHaveLength(0);
   });
 });
