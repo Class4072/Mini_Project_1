@@ -1,0 +1,15 @@
+spring:
+  cache:
+    type: none
+  jpa:
+    properties:
+      hibernate:
+        format_sql: false
+
+ai:
+  service:
+    timeout-seconds: 5
+
+app:
+  share:
+    base-url: https://trp.test/s
