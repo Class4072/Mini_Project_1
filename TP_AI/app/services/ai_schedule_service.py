@@ -90,7 +90,7 @@ class AIScheduleService:
         weather_keyword = "비 오는 날 실내 명소 및 아늑한 오션뷰 카페 복합문화공간" if is_any_rain else "맑은 날 즐기기 좋은 야외 명소와 힐링 산책로 감성 스팟"
         semantic_query = f"{region_name} {themes_text} {companion_name} {weather_keyword} 인기 명소 맛집 카페"
         
-        query_vec = embedding_service.embed_text(semantic_query)
+        query_vec = await embedding_service.embed_text_async(semantic_query)
         cosine_dist = TravelSpot.embedding.cosine_distance(query_vec)
         cosine_sim = (1.0 - cosine_dist).label("similarity")
 
@@ -243,7 +243,7 @@ class AIScheduleService:
             weather_keyword = "비 오는 날 실내 명소 및 카페" if is_any_rain else "맑은 날 즐기기 좋은 야외 명소와 힐링 스팟"
             semantic_query = f"{reg} {themes_text} {companion_name} {weather_keyword} 인기 명소 맛집 카페"
             
-            query_vec = embedding_service.embed_text(semantic_query)
+            query_vec = await embedding_service.embed_text_async(semantic_query)
             cosine_dist = TravelSpot.embedding.cosine_distance(query_vec)
             cosine_sim = (1.0 - cosine_dist).label("similarity")
 
@@ -352,7 +352,7 @@ class AIScheduleService:
 
         # 1. 변경된 날씨에 맞는 시맨틱 검색어 생성
         query_text = f"{region_name} 비 오는 날 실내 즐길거리 미술관 아쿠아리움 대형 오션뷰 카페 실내복합공간"
-        query_vec = embedding_service.embed_text(query_text)
+        query_vec = await embedding_service.embed_text_async(query_text)
         cosine_dist = TravelSpot.embedding.cosine_distance(query_vec)
 
         # 2. 반경 필터링 및 유사도 검색

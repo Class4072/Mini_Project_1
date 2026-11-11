@@ -9,6 +9,7 @@ from sqlalchemy import text
 from app.config import settings
 from app.database import engine, init_db
 from app.core.embedding import embedding_service
+from app.core.llm_client import llm_client
 from app.api.v1.router import api_router
 from app.core.logger import app_logger
 
@@ -34,6 +35,7 @@ async def lifespan(app: FastAPI):
     yield
 
     app_logger.info("Shutting down application...")
+    await llm_client.close()
     await engine.dispose()
 
 
@@ -46,6 +48,9 @@ app = FastAPI(
 
 # CORS Middleware (보안 설정: 와일드카드 origin 사용 시 credentials 비활성화)
 is_wildcard = "*" in settings.CORS_ORIGINS
+if is_wildcard and settings.APP_ENV == "production":
+    app_logger.warning("🚨 [보안 경고] 프로덕션 환경에서 CORS 와일드카드('*')가 활성화되어 있습니다. 도메인 화이트리스트 지정을 권장합니다.")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,

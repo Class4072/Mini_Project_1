@@ -29,10 +29,25 @@ class LLMClient:
     def __init__(self):
         self.timeout = settings.LLM_TIMEOUT_SECONDS
         self.max_retries = 2  # 최초 시도 1회 + 재시도 최대 2회 = 총 3회 시도
+        self._client: Optional[httpx.AsyncClient] = None
+
+    def get_client(self) -> httpx.AsyncClient:
+        """재사용 가능한 HTTP 클라이언트 커넥션 풀 획득 (CWE-770 리소스 고갈 방어)"""
+        if self._client is None or self._client.is_closed:
+            limits = httpx.Limits(max_keepalive_connections=20, max_connections=50)
+            self._client = httpx.AsyncClient(timeout=self.timeout, limits=limits)
+        return self._client
+
+    async def close(self):
+        """수명주기 종료 시 HTTP 커넥션 풀 정상 해제"""
+        if self._client is not None and not self._client.is_closed:
+            await self._client.aclose()
+            self._client = None
 
     async def _call_provider_raw(self, system_prompt: str, user_prompt: str) -> str:
         """설정된 LLM_PROVIDER에 따라 비동기 HTTP 호출 수행"""
         provider = settings.LLM_PROVIDER.lower()
+        client = self.get_client()
 
         if provider == "ollama":
             url = f"{settings.OLLAMA_BASE_URL.rstrip('/')}/api/generate"
@@ -46,12 +61,10 @@ class LLMClient:
                     "temperature": 0.2,  # 환각 방지를 위한 낮은 온도
                 },
             }
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                res = await client.post(url, json=payload)
-                res.raise_for_status()
-                data = res.json()
-                return data.get("response", "")
-
+            res = await client.post(url, json=payload)
+            res.raise_for_status()
+            data = res.json()
+            return data.get("response", "")
 
         elif provider == "openai":
             if not settings.OPENAI_API_KEY:
@@ -70,11 +83,10 @@ class LLMClient:
                 "temperature": 0.2,
                 "response_format": {"type": "json_object"},
             }
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                res = await client.post(url, headers=headers, json=payload)
-                res.raise_for_status()
-                data = res.json()
-                return data["choices"][0]["message"]["content"]
+            res = await client.post(url, headers=headers, json=payload)
+            res.raise_for_status()
+            data = res.json()
+            return data["choices"][0]["message"]["content"]
 
         elif provider == "gemini":
             if not settings.GEMINI_API_KEY:
@@ -94,14 +106,13 @@ class LLMClient:
                     "response_mime_type": "application/json",
                 },
             }
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                res = await client.post(url, headers=headers, json=payload)
-                res.raise_for_status()
-                data = res.json()
-                candidates = data.get("candidates", [])
-                if not candidates:
-                    raise ValueError("Gemini로부터 응답을 받지 못했습니다.")
-                return candidates[0]["content"]["parts"][0]["text"]
+            res = await client.post(url, headers=headers, json=payload)
+            res.raise_for_status()
+            data = res.json()
+            candidates = data.get("candidates", [])
+            if not candidates:
+                raise ValueError("Gemini로부터 응답을 받지 못했습니다.")
+            return candidates[0]["content"]["parts"][0]["text"]
 
 
         else:
