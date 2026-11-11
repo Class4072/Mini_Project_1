@@ -77,14 +77,17 @@ class PromptBuilder:
         else:
             weather_desc_lines.append("- 예보 데이터 없음 (쾌적한 일반 날씨 기준)")
 
-        # 3. 후보 장소 목록 포매팅 (LLM이 환각 없이 고를 수 있도록 명확히 전달)
+        # 3. 후보 장소 목록 포매팅 (토큰 다이어트: 설명문 60자 요약 및 좌표 소수점 4자리 정규화)
         candidates_formatted = []
         for idx, p in enumerate(candidate_places, start=1):
             meta = p.get("metadata", {})
             indoor_str = "실내" if meta.get("is_indoor") or "실내" in meta.get("weather_suitability", []) else "야외"
+            desc = p.get("description", "").strip()[:60]
+            lat = round(float(p["latitude"]), 4)
+            lon = round(float(p["longitude"]), 4)
             candidates_formatted.append(
-                f"{idx}. ID: {p['id']} | 이름: {p['name']} | 카테고리: {p['category']} | 유형: {indoor_str} | "
-                f"좌표: ({p['latitude']}, {p['longitude']}) | 설명: {p.get('description', '')[:100]}"
+                f"{idx}. ID: {p['id']} | {p['name']} | {p['category']} | {indoor_str} | "
+                f"({lat}, {lon}) | {desc}"
             )
 
         prompt_parts = [
