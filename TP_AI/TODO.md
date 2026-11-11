@@ -42,6 +42,9 @@
 
 ## 🚀 3. 핵심 엔진 및 고도화 완료 기능 (Core Engine Done)
 
+- [x] **기상청 예보 DB(`weather_forecasts`) 1순위 조회 및 계절 Fallback 연동**:
+  - `WeatherForecast` 모델 신설 및 `weather_service.get_daily_weathers()` 구현
+  - 일정 생성 시 클라이언트가 날씨를 미입력하더라도 DB에 적재된 기상청 예보 데이터를 1순위로 조회하여 일정에 자동 반영 (DB 미적재 시 계절 Fallback 보완)
 - [x] **출발지/숙소 거점 앵커링 (Anchor Routing)**:
   - KTX역, 공항, 숙소 등 시작 거점(`startLatitude`, `startLongitude`, `startLocationName`) 및 복귀 거점 지정 지원
   - Day 1 시작 시 거점과의 거리 감쇠 가중치(Distance Weighting)를 적용하여 거점 인근 명소부터 일정 시작
@@ -64,6 +67,9 @@
 
 ## 📌 4. 향후 확장 과제 (Future Backlog)
 
+- [ ] **실제 DB 연동 시 기상청 예보(`weather_forecasts`) 테이블 실제 스키마 생성 및 배치 적재 체크**:
+  - `init_db()` 실행 시 `weather_forecasts` DDL 정상 반영 확인
+  - 기상청 단기/중기 예보 배치 파이프라인에서 적재된 일자별 예보 데이터와 AI 스케줄러의 실제 연동 상태 E2E 체크
 - [ ] **외부 경로/모빌리티 API 연동 검토**:
   - 카카오 모빌리티 API 또는 OSRM(Open Source Routing Machine) 연동을 통한 실제 도로 주행 기준 시간 산출
 - [ ] **PostgreSQL pgvector 로컬 Docker E2E 시딩 검증**:

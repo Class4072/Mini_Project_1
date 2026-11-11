@@ -16,6 +16,7 @@ from app.core.logger import app_logger
 from app.core.embedding import embedding_service
 from app.core.route_planner import route_planner
 from app.core.weather_advisor import weather_advisor
+from app.services.weather_service import weather_service
 from app.core.code_mapper import code_mapper
 from app.core.llm_client import llm_client
 from app.schemas.ai import DailyWeatherInput
@@ -63,22 +64,28 @@ class AIScheduleService:
         )
 
 
-        # 0-1. 날씨 정보가 없을 경우 자체 계절/날씨 추론하여 보강 (02_명세: FE/BE에서 미입력 시 대비)
+        # 0-1. 날씨 정보 확보 (1순위: 기상청 예보 DB 조회 -> 2순위: 계절 평년 날씨 추론 Fallback)
         if not req.dailyWeathers:
-            travel_days = max(1, (req.endDate - req.startDate).days + 1)
-            generated_weathers = []
-            for d_idx in range(travel_days):
-                curr_d = req.startDate + timedelta(days=d_idx)
-                wb = weather_advisor.generate_weather_briefing(region_name, curr_d)
-                generated_weathers.append(
-                    DailyWeatherInput(
-                        date=curr_d,
-                        condition="RAIN" if "비" in wb["expected_weather"] else "SUNNY",
-                        temp=20.0,
-                        precipitationProbability=10,
+            db_weathers = await weather_service.get_daily_weathers(
+                db, region_name, req.startDate, req.endDate
+            )
+            if db_weathers:
+                req.dailyWeathers = db_weathers
+            else:
+                travel_days = max(1, (req.endDate - req.startDate).days + 1)
+                generated_weathers = []
+                for d_idx in range(travel_days):
+                    curr_d = req.startDate + timedelta(days=d_idx)
+                    wb = weather_advisor.generate_weather_briefing(region_name, curr_d)
+                    generated_weathers.append(
+                        DailyWeatherInput(
+                            date=curr_d,
+                            condition="RAIN" if "비" in wb["expected_weather"] else "SUNNY",
+                            temp=20.0,
+                            precipitationProbability=10,
+                        )
                     )
-                )
-            req.dailyWeathers = generated_weathers
+                req.dailyWeathers = generated_weathers
 
         # 1단계: RAG 기반 날씨·계절 시맨틱 장소 추출 (Retrieval)
         is_any_rain = any(
@@ -228,21 +235,25 @@ class AIScheduleService:
             r_idx = min(len(region_names) - 1, int((day_idx - 1) / travel_days * len(region_names)))
             day_region_map[day_idx] = region_names[r_idx]
 
-        # 2. 날씨 정보 보강 (일자별 해당 지역 기준)
+        # 2. 날씨 정보 보강 (1순위: 기상청 예보 DB 조회 -> 2순위: 계절 Fallback)
         if not req.dailyWeathers:
             generated_weathers = []
             for d_idx in range(travel_days):
                 curr_d = req.startDate + timedelta(days=d_idx)
                 curr_reg = day_region_map[d_idx + 1]
-                wb = weather_advisor.generate_weather_briefing(curr_reg, curr_d)
-                generated_weathers.append(
-                    DailyWeatherInput(
-                        date=curr_d,
-                        condition="RAIN" if "비" in wb["expected_weather"] else "SUNNY",
-                        temp=20.0,
-                        precipitationProbability=10,
+                reg_weathers = await weather_service.get_daily_weathers(db, curr_reg, curr_d, curr_d)
+                if reg_weathers:
+                    generated_weathers.append(reg_weathers[0])
+                else:
+                    wb = weather_advisor.generate_weather_briefing(curr_reg, curr_d)
+                    generated_weathers.append(
+                        DailyWeatherInput(
+                            date=curr_d,
+                            condition="RAIN" if "비" in wb["expected_weather"] else "SUNNY",
+                            temp=20.0,
+                            precipitationProbability=10,
+                        )
                     )
-                )
             req.dailyWeathers = generated_weathers
 
         is_any_rain = any(
