@@ -75,4 +75,36 @@ class TestCodeMapperAndRoutePlanner:
         post_meal_place = day1[2]
         assert post_meal_place["id"] == "c_near"
 
+    def test_anchor_routing_priority(self):
+        """출발 거점(KTX 부산역) 지정 시, 거점 인근 명소가 Day 1 첫 일정으로 우선 선정되는지 검증"""
+        spots = [
+            # 부산역 바로 인근 (0.5km) 명소 (기본 점수 0.85)
+            {"id": "near_station", "name": "초량 이바구길", "category": "자연/산책", "latitude": 35.1180, "longitude": 129.0390, "score": 0.85},
+            # 부산역에서 15km 떨어진 해운대 명소 (기본 점수 0.95로 더 높음)
+            {"id": "far_beach", "name": "해운대 해변", "category": "자연/산책", "latitude": 35.1610, "longitude": 129.1750, "score": 0.95},
+            # 식당
+            {"id": "r1", "name": "초량 돼지갈비", "category": "맛집/한식", "latitude": 35.1190, "longitude": 129.0400, "score": 0.90},
+            # 카페
+            {"id": "c1", "name": "초량 브라운핸즈", "category": "카페/커피", "latitude": 35.1170, "longitude": 129.0410, "score": 0.88},
+        ]
+
+        # 1. 앵커 없이 실행: 기본 점수가 높은 far_beach가 첫 일정으로 선택됨
+        no_anchor_itinerary = route_planner.optimize_category_aware_itinerary(
+            spots=spots,
+            travel_days=1,
+            spots_per_day=3,
+        )
+        assert no_anchor_itinerary[0][0]["id"] == "far_beach"
+
+        # 2. 시작 거점을 '부산역'으로 지정: 거리 가중치로 인해 부산역 인근의 near_station이 첫 일정으로 선정됨!
+        busan_station_anchor = {"name": "부산역", "latitude": 35.1152, "longitude": 129.0422}
+        anchored_itinerary = route_planner.optimize_category_aware_itinerary(
+            spots=spots,
+            travel_days=1,
+            spots_per_day=3,
+            start_anchor=busan_station_anchor,
+        )
+        assert anchored_itinerary[0][0]["id"] == "near_station"
+
+
 

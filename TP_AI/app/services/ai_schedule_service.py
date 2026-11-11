@@ -166,10 +166,19 @@ class AIScheduleService:
 
         # 2단계: 위경도 좌표 및 카테고리 제약조건(식사/카페/중복방지) 기반 동선 최적화 (AI.md 4.1)
         travel_days = max(1, (req.endDate - req.startDate).days + 1)
+        start_anchor = None
+        if req.startLatitude is not None and req.startLongitude is not None:
+            start_anchor = {
+                "name": req.startLocationName or "시작 거점",
+                "latitude": float(req.startLatitude),
+                "longitude": float(req.startLongitude),
+            }
+
         daily_grouped = route_planner.optimize_category_aware_itinerary(
             spots=candidate_places,
             travel_days=travel_days,
             spots_per_day=spots_per_day,
+            start_anchor=start_anchor,
         )
 
 
@@ -306,6 +315,13 @@ class AIScheduleService:
         daily_grouped = []
         used_ids = set()
         prev_day_last_spot = None
+        start_anchor = None
+        if req.startLatitude is not None and req.startLongitude is not None:
+            start_anchor = {
+                "name": req.startLocationName or "시작 거점",
+                "latitude": float(req.startLatitude),
+                "longitude": float(req.startLongitude),
+            }
 
         for day_idx in range(1, travel_days + 1):
             assigned_region = day_region_map[day_idx]
@@ -317,10 +333,12 @@ class AIScheduleService:
             if not reg_candidates:
                 reg_candidates = [s for s in all_candidate_places if s["id"] not in used_ids]
 
+            day_anchor = start_anchor if (day_idx == 1) else None
             day_plan_raw = route_planner.optimize_category_aware_itinerary(
                 spots=reg_candidates,
                 travel_days=1,
                 spots_per_day=spots_per_day,
+                start_anchor=day_anchor,
             )
             if day_plan_raw:
                 day_spots = day_plan_raw[0]

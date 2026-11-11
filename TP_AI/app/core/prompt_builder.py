@@ -99,6 +99,15 @@ class PromptBuilder:
             f"- 여행 테마: {themes_desc}",
             f"- 하루 일정 밀도: 하루 약 {spots_count}곳 권장 ({req.placesPerDay or 'NORMAL'})",
             f"- 첫 일정 시작 시각: {start_time_str}부터 시작하여 21:00경 종료 ({req.startTime or 'NORMAL'})",
+        ]
+
+        # 거점 앵커링 정보가 있을 경우 주입
+        if req.startLocationName:
+            prompt_parts.append(f"- 출발 거점 (시작지점): {req.startLocationName} (도착 후 첫 번째 방문지는 이 거점에서 인접하고 효율적인 장소로 배치)")
+        if req.endLocationName:
+            prompt_parts.append(f"- 복귀 거점 (종료지점): {req.endLocationName} (마지막 날 일정은 이 거점으로 이동하기 편리한 장소로 마무리)")
+
+        prompt_parts.extend([
             "",
             f"### [당일 기상청 날씨/예보 정보]",
             "\n".join(weather_desc_lines),
@@ -106,7 +115,7 @@ class PromptBuilder:
             f"### [선택 가능한 후보 장소 목록 (Candidate Places)]",
             "※ 주의: 아래 목록에 명시된 장소만 일정에 포함해야 합니다. 목록에 없는 가상의 장소를 추가하면 시스템 오류가 발생합니다.",
             "\n".join(candidates_formatted),
-        ]
+        ])
 
         # 3. 예외 재시도 피드백이 있을 경우 주입
         if error_feedback:

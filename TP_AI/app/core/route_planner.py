@@ -109,8 +109,9 @@ class RoutePlanner:
         spots: List[Dict[str, Any]],
         travel_days: int = 1,
         spots_per_day: int = 4,
+        start_anchor: Optional[Dict[str, Any]] = None,
     ) -> List[List[Dict[str, Any]]]:
-        """식사 시간대 식당 배치 및 [식사 ➡️ 카페 or 컨텐츠] 자연스러운 시퀀스 & 동선 가중치 최적화"""
+        """식사 시간대 식당 배치 및 [식사 ➡️ 카페 or 컨텐츠] 자연스러운 시퀀스 & 거점 앵커링 동선 가중치 최적화"""
         if not spots:
             return []
 
@@ -157,8 +158,8 @@ class RoutePlanner:
 
         for day in range(1, travel_days + 1):
             day_schedule: List[Dict[str, Any]] = []
-            # Day 2 이후 시작 시 직전 일차(Day 1)의 마지막 권역과 인접한 곳에서 하루를 시작하도록 연결
-            current_loc = prev_day_last_spot
+            # Day 1: 시작 거점(KTX역/공항/숙소)이 주어지면 해당 위치부터 출발, Day 2+: 이전 일차의 마지막 장소 연계
+            current_loc = start_anchor if (day == 1 and start_anchor) else prev_day_last_spot
 
 
             for step_idx, slot_type in enumerate(pattern, start=1):

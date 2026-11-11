@@ -75,6 +75,32 @@ class AIScheduleRequest(BaseModel):
         description="백엔드에서 사전 조회한 일자별 기상 예보 데이터 (없으면 AI가 자동 계절/날씨 추론)",
     )
 
+    # 시작/도착 거점 앵커링 필드 (KTX역, 공항, 숙소 등)
+    startLocationName: Optional[str] = Field(
+        None,
+        description="여행 시작 거점명 (예: '부산역', '김해공항', '해운대 숙소')",
+    )
+    startLatitude: Optional[float] = Field(
+        None,
+        description="시작 거점 위도",
+    )
+    startLongitude: Optional[float] = Field(
+        None,
+        description="시작 거점 경도",
+    )
+    endLocationName: Optional[str] = Field(
+        None,
+        description="여행 종료/복귀 거점명 (예: '부산역', '김해공항')",
+    )
+    endLatitude: Optional[float] = Field(
+        None,
+        description="종료 거점 위도",
+    )
+    endLongitude: Optional[float] = Field(
+        None,
+        description="종료 거점 경도",
+    )
+
     @model_validator(mode="before")
     @classmethod
     def reconcile_legacy_and_draft_fields(cls, data: Any) -> Any:
