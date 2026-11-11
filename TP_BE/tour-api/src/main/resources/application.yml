@@ -1,0 +1,61 @@
+# BACKEND.md 10장 기준. 접속 정보는 환경변수(또는 TP_BE/.env)로만 넣는다.
+spring:
+  application:
+    name: tour-api
+  config:
+    # TP_BE 폴더에서 실행하면 .env 를 읽는다 (없으면 무시). 예시는 .env.example
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/tour_db}
+    # 앱은 tp_backend 로만 접속한다 (DATABASE.md 6장)
+    username: ${DB_USER:tp_backend}
+    password: ${DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    # 루트 db/migration 의 SQL을 테이블 소유자 tp_owner 로 실행한다 (DATABASE.md 팀 합의 5번)
+    enabled: ${FLYWAY_ENABLED:true}
+    user: ${FLYWAY_USER:tp_owner}
+    password: ${FLYWAY_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 100
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:tour_redis_pass}
+      timeout: 1s
+      connect-timeout: 1s
+  cache:
+    # Redis 없이 실행할 때는 CACHE_TYPE=none
+    type: ${CACHE_TYPE:redis}
+  mvc:
+    async:
+      # 일정 생성(코루틴)이 AI 응답을 기다리는 시간보다 길어야 한다
+      request-timeout: 130s
+
+# AI 마이크로서비스 연동 주소
+ai:
+  service:
+    base-url: ${AI_SERVICE_BASE_URL:http://localhost:8000}
+    # LLM 생성이 길어 FE 타임아웃(120초)보다 조금 짧게 둔다
+    timeout-seconds: ${AI_SERVICE_TIMEOUT_SECONDS:100}
+
+app:
+  share:
+    base-url: ${SHARE_BASE_URL:https://trp.com/s}
+
+kakao:
+  mobility:
+    base-url: https://apis-navi.kakaomobility.com
+    rest-api-key: ${KAKAO_MOBILITY_REST_API_KEY:}
+
+logging:
+  pattern:
+    # BACKEND.md 8장: [시각] [레벨] [req_id=...] [클래스:줄] - 메시지
+    console: "[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [req_id=%X{traceId:-}] [%logger{0}:%line] - %msg%n"

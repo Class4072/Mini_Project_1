@@ -1,0 +1,15 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# BACKEND.md 7.1: Kotlin 공식 컨벤션 + ktlint, 줄 길이 120자, 공백 4칸
+[*.{kt,kts}]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+ktlint_code_style = intellij_idea
+ktlint_function_naming_ignore_when_annotated_with = Test

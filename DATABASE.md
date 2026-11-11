@@ -123,10 +123,15 @@ DB에는 `VARCHAR` + `CHECK`로 저장합니다. 백엔드(Kotlin), AI·배치(P
 | **Category** (장소 분류) | `TOUR_SPOT`, `CULTURE`, `FESTIVAL`, `LEISURE`, `ACCOMMODATION`, `SHOPPING`, `RESTAURANT`, `CAFE` | BATCH.md 10.3 `CategoryType` + `CAFE` |
 | **WeatherCondition** | `SUNNY`, `CLOUDY`, `RAIN`, `SNOW` | BATCH.md 10.3, 5.2 |
 | **Season** | `SPRING`, `SUMMER`, `AUTUMN`, `WINTER` | 장소의 추천 계절 |
-| **Theme** (여행 테마) | `HEALING`, `FOOD_CAFE`, `ACTIVITY`, `CULTURE` | FRONTEND.md 3.1의 4개 테마 |
-| **Transportation** | `PUBLIC`, `CAR` | FRONTEND.md 3.1, AI.md 7.1 |
+| **Theme** (여행 취향) | `NATURE`, `HISTORY_CULTURE`, `FOOD`, `CAFE`, `ACTIVITY`, `SHOPPING`, `FESTIVAL`, `HEALING` | 일정 생성 요청 초안. 0~3개, 빈 배열은 '골고루' |
+| **Transport** (이동수단) | `CAR`, `PUBLIC_TRANSIT`, `WALK` | 일정 생성 요청 초안 |
+| **CompanionType** (동행) | `SOLO`, `COUPLE`, `FRIENDS`, `FAMILY_WITH_KIDS`, `FAMILY_WITH_PARENTS`, `GROUP` | 일정 생성 요청 초안 |
+| **PlacesPerDay** (하루 방문 수) | `RELAXED`, `NORMAL`, `PACKED` | 일정 생성 요청 초안 |
+| **StartTime** (첫 일정 시작) | `EARLY`(08:00), `NORMAL`(10:00), `LATE`(11:00) | 일정 생성 요청 초안. 종료는 모두 21:00 |
 | **TripStatus** | `GENERATING`, `COMPLETED`, `FAILED` | AI 일정 생성 진행 상태 |
 | **RegionLevel** | `SIDO`, `SIGUNGU` | |
+
+**일정 생성 요청 초안**: FE `feat/fe-main-page` 브랜치의 `tripRequestOptions.js`와 AI `feat/ai-schedule-pipeline` 브랜치의 `02_요청 데이터 명세 초안.md`. 두 곳 모두 코드값이 임시라, 팀 회의에서 확정되면 이 표와 함께 고칩니다.
 
 **Category와 TourAPI 관광타입(contentTypeId) 대응**
 
@@ -309,30 +314,39 @@ BACKEND.md ERD에 USERS가 있지만 컬럼과 인증 API는 정의되어 있지
 
 ```sql
 CREATE TABLE trips (
-    id               BIGSERIAL    PRIMARY KEY,
-    user_id          BIGINT       REFERENCES users (id),    -- 로그인 범위가 정해지면 NOT NULL 여부 결정
+    id               BIGSERIAL     PRIMARY KEY,
+    user_id          BIGINT        REFERENCES users (id),   -- 로그인 범위가 정해지면 NOT NULL 여부 결정
     title            VARCHAR(100),                          -- AI tripName (생성 완료 후 채움)
-    region_code      VARCHAR(20)  NOT NULL REFERENCES region (region_code),
-    start_date       DATE         NOT NULL,
-    end_date         DATE         NOT NULL,
-    theme            VARCHAR(20)  NOT NULL CHECK (theme IN ('HEALING', 'FOOD_CAFE', 'ACTIVITY', 'CULTURE')),
-    transportation   VARCHAR(10)  NOT NULL CHECK (transportation IN ('PUBLIC', 'CAR')),
-    person_count     SMALLINT     NOT NULL DEFAULT 1 CHECK (person_count >= 1),
+    region_code      VARCHAR(20)   NOT NULL REFERENCES region (region_code),
+    start_date       DATE          NOT NULL,
+    end_date         DATE          NOT NULL,
+    companion_type   VARCHAR(30)   NOT NULL CHECK (companion_type IN (
+                         'SOLO', 'COUPLE', 'FRIENDS', 'FAMILY_WITH_KIDS', 'FAMILY_WITH_PARENTS', 'GROUP')),
+    traveler_count   SMALLINT      NOT NULL DEFAULT 1 CHECK (traveler_count BETWEEN 1 AND 100),
+    transport        VARCHAR(20)   NOT NULL CHECK (transport IN ('CAR', 'PUBLIC_TRANSIT', 'WALK')),
+    themes           VARCHAR(20)[] NOT NULL DEFAULT '{}'    -- 0~3개, 비어 있으면 '골고루'
+                         CHECK (cardinality(themes) <= 3
+                            AND themes <@ ARRAY['NATURE', 'HISTORY_CULTURE', 'FOOD', 'CAFE',
+                                                'ACTIVITY', 'SHOPPING', 'FESTIVAL', 'HEALING']::VARCHAR(20)[]),
+    places_per_day   VARCHAR(10)   NOT NULL DEFAULT 'NORMAL' CHECK (places_per_day IN ('RELAXED', 'NORMAL', 'PACKED')),
+    start_time       VARCHAR(10)   NOT NULL DEFAULT 'NORMAL' CHECK (start_time IN ('EARLY', 'NORMAL', 'LATE')),
     weather_summary  TEXT,                                  -- AI weatherSummary
     memo             TEXT,                                  -- TR-003 메모
-    status           VARCHAR(20)  NOT NULL DEFAULT 'GENERATING'
+    status           VARCHAR(20)   NOT NULL DEFAULT 'GENERATING'
                          CHECK (status IN ('GENERATING', 'COMPLETED', 'FAILED')),
-    created_at       TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    updated_at       TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    created_at       TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    updated_at       TIMESTAMPTZ   NOT NULL DEFAULT now(),
     deleted_at       TIMESTAMPTZ,                           -- TR-004 Soft Delete
-    CONSTRAINT ck_trip_period CHECK (end_date >= start_date AND end_date - start_date <= 6)  -- 최대 7일
+    CONSTRAINT ck_trip_period CHECK (end_date >= start_date AND end_date - start_date <= 13)  -- 최대 14일 (AI 상한)
 );
 
 CREATE INDEX ix_trips_user ON trips (user_id) WHERE deleted_at IS NULL;
 ```
 
+- 요청 필드 이름과 코드값은 [일정 생성 요청 초안](#3-공통-코드-enum)을 따릅니다 (`companion_type`, `traveler_count`, `transport`, `themes`, `places_per_day`, `start_time`).
+- 요청의 `regionCodes`는 TourAPI 지역코드(예: 부산 `"6"`)로 옵니다. 백엔드는 `region_code`가 같은 행, 없으면 `tour_area_code`가 같은 시도 행을 찾아 그 `region_code`를 저장합니다. 지역은 지금 1개만 받습니다 (여러 지역을 받으려면 여행-지역 테이블을 따로 둬야 함).
 - `status`는 AI 일정 생성이 오래 걸릴 때를 대비한 값입니다. 생성 요청 시 `GENERATING`으로 저장하고, AI 응답을 받으면 `COMPLETED`/`FAILED`로 바꿉니다.
-- 최대 7일 제한은 FRONTEND.md 3.1(캘린더 최대 7일) 기준입니다.
+- 최대 14일 제한은 AI 서비스의 상한(TP_AI `API_SPEC.md` 3.2) 기준입니다. FE는 개발 단계라 상한을 두지 않았습니다.
 
 ### 4.9 `schedules` — 일자별 일정 (BACKEND.md SCHEDULE)
 
@@ -589,8 +603,8 @@ ORDER BY grantee, table_name;
 | BATCH.md | 4.1 청크 템플릿 | `region_name`, `sigungu_name` → `region.name`, `holiday_info` 등은 `tour_place_details`에서 읽음 |
 | BATCH.md | 7 DDL | 이 문서로 링크 |
 | BATCH.md | 10.3 CategoryType | `CAFE` 추가 |
-| BACKEND.md | 6.1 ERD | 이 문서로 링크. TRIP에 `user_id`·`transportation`·`person_count`·`deleted_at`, SCHEDULE에 기온 추가 |
-| FRONTEND.md | 3.1 여행 생성 | 테마·이동수단 값을 [3. 공통 코드](#3-공통-코드-enum)와 맞춤 |
+| BACKEND.md | 6.1 ERD | 이 문서로 링크. TRIP에 `user_id`·`companion_type`·`traveler_count`·`transport`·`themes`·`places_per_day`·`start_time`·`deleted_at`, SCHEDULE에 기온 추가 |
+| FRONTEND.md | 3.1 여행 생성 | fe 브랜치에서 재작성됨. 코드값은 [3. 공통 코드](#3-공통-코드-enum)의 일정 생성 요청 초안과 같음 |
 | ROOT.md | 로컬 개발 환경 `.env` | `DB_USER=tour_admin` 하나 → 서비스별 계정 ([6. DB 계정과 권한](#6-db-계정과-권한)) |
 | BACKEND.md | 10 `application.yml` | `DB_USER` 기본값 `tour_admin` → `tp_backend`. Flyway는 `tp_owner`로 접속 |
 | AI.md | 12 `.env` | `DATABASE_URL`의 계정 `tour_admin` → `tp_ai` |
