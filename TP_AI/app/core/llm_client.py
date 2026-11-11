@@ -15,6 +15,7 @@ from app.schemas.ai import (
 from app.core.logger import app_logger
 from app.core.prompt_builder import prompt_builder
 from app.core.code_mapper import code_mapper
+from app.core.route_planner import route_planner
 from app.core.json_parser import (
     schedule_parser,
     LLMResponseFormatError,
@@ -231,12 +232,39 @@ class LLMClient:
             if not selected_for_day and places_pool:
                 selected_for_day = places_pool[:places_per_day]
 
-            curr_hour = start_hour
+            # 가용 시간대 계산 (시작시간 ~ 최대 21:00 종료)
+            max_end_hour = 21
+            total_slots = len(selected_for_day)
+            
+            curr_prev_spot = None
+            total_day_dist = 0.0
+
+            curr_minute = start_hour * 60
+            max_minute = max_end_hour * 60
+            # 장소당 할당 가능한 시간 (분)
+            available_time = max(180, max_minute - curr_minute)
+            step_slot_min = max(60, min(120, available_time // max(1, total_slots)))
+
             for step_idx, spot in enumerate(selected_for_day, start=1):
-                start_t = f"{curr_hour:02d}:00"
-                stay_min = 90
-                curr_hour += 2
-                end_t = f"{curr_hour:02d}:00"
+                # 직전 장소와의 거리 및 이동 시간 산출
+                dist_km = 0.0
+                travel_min = 0
+                if curr_prev_spot:
+                    dist_km = route_planner.calculate_distance_km(
+                        curr_prev_spot["latitude"], curr_prev_spot["longitude"],
+                        spot["latitude"], spot["longitude"],
+                    )
+                    travel_min = route_planner.estimate_travel_time_min(dist_km, req.transport)
+                    total_day_dist += dist_km
+
+                start_m = min(curr_minute + travel_min, max_minute - 30)
+                stay_m = max(30, min(90, step_slot_min - travel_min))
+                end_m = min(start_m + stay_m, max_minute)
+
+                start_t = f"{start_m // 60:02d}:{start_m % 60:02d}"
+                end_t = f"{end_m // 60:02d}:{end_m % 60:02d}"
+                curr_minute = end_m
+                curr_prev_spot = spot
 
                 themes_name = code_mapper.get_theme_descriptions(req.themes) if req.themes else (req.theme or "힐링 코스")
                 reason_text = (
@@ -252,9 +280,12 @@ class LLMClient:
                         category=spot["category"],
                         startTime=start_t,
                         endTime=end_t,
-                        stayTimeMinutes=stay_min,
+                        stayTimeMinutes=max(30, end_m - start_m),
                         latitude=spot["latitude"],
                         longitude=spot["longitude"],
+                        distanceFromPrevKm=round(dist_km, 2) if step_idx > 1 else None,
+                        estimatedTravelMinutes=travel_min if step_idx > 1 else None,
+                        transportMode=req.transport or "PUBLIC_TRANSIT",
                         reason=reason_text,
                         address=spot.get("address"),
                     )
@@ -265,6 +296,7 @@ class LLMClient:
                     day=day_idx,
                     date=curr_date.strftime("%Y-%m-%d"),
                     weatherCondition=weather_condition,
+                    totalDayDistanceKm=round(total_day_dist, 2),
                     places=day_places,
                 )
             )

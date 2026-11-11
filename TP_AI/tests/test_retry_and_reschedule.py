@@ -147,5 +147,88 @@ def test_invalid_date_range_validation():
     assert "이후여야 합니다" in str(exc_info.value)
 
 
+@pytest.mark.asyncio
+async def test_reschedule_sequential_distance_and_clamping():
+    """실시간 재추천 시 실제 순차 주행 거리 누적 및 21:00 클램핑 검증"""
+    req = AIRescheduleRequest(
+        regionCode="6",
+        currentLatitude=35.1585,
+        currentLongitude=129.1820,
+        newWeatherCondition="RAIN",
+        remainingStepsCount=3,
+    )
+
+    # 3개 가상 장소 DB Mock 설정
+    class MockSpot:
+        def __init__(self, id, name, cat, lat, lon):
+            self.id = id
+            self.name = name
+            self.category = cat
+            self.latitude = lat
+            self.longitude = lon
+            self.address = f"부산 {name}"
+            self.description = f"{name} 설명"
+            self.spot_metadata = {"is_indoor": True}
+
+    spots = [
+        MockSpot("s1", "해운대 아쿠아리움", "실내/아쿠아리움", 35.1590, 129.1830),
+        MockSpot("s2", "센텀 신세계 스파랜드", "실내/스파", 35.1689, 129.1296),
+        MockSpot("s3", "부산 시립미술관", "실내/미술관", 35.1663, 129.1368),
+    ]
+
+    mock_db = AsyncMock()
+    from unittest.mock import MagicMock
+    mock_res = MagicMock()
+    mock_scalars = MagicMock()
+    mock_scalars.all.return_value = spots
+    mock_res.scalars.return_value = mock_scalars
+    mock_db.execute.return_value = mock_res
+
+    with patch("app.core.embedding.embedding_service.embed_text", return_value=[0.1] * 768):
+        res = await ai_schedule_service.reschedule(mock_db, req)
+
+    # 검증 1: 장소 개수
+    assert len(res.recommendedPlaces) == 3
+    # 검증 2: 각 장소의 구간 거리(distanceFromPrevKm) 및 이동 시간(estimatedTravelMinutes) 존재
+    for p in res.recommendedPlaces:
+        assert p.distanceFromPrevKm is not None
+        assert p.estimatedTravelMinutes is not None
+        # 검증 3: 시각 21:00 클램핑 및 두 자릿수 포맷
+        hour = int(p.endTime.split(":")[0])
+        assert hour <= 21
+
+    # 검증 4: totalDistanceKm이 각 구간(현재위치->1, 1->2, 2->3)의 실제 합산과 일치
+    expected_sum = sum(p.distanceFromPrevKm for p in res.recommendedPlaces)
+    assert round(res.totalDistanceKm, 1) == round(expected_sum, 1)
+
+
+def test_fallback_schedule_time_clamping():
+    """Fallback 일정 생성 시 6개 이상 장소여도 24시 오버플로우 없이 21:00 내로 종료되는지 검증"""
+    req = AIScheduleRequest(
+        regionCodes=["6"],
+        startDate="2026-11-01",
+        endDate="2026-11-01",
+        placesPerDay="PACKED",
+        startTime="LATE",  # 11:00 시작
+    )
+    candidate_places = [
+        {"id": f"p{i}", "name": f"장소 {i}", "category": "관광", "latitude": 35.1 + i*0.01, "longitude": 129.1}
+        for i in range(8)
+    ]
+
+    fallback = llm_client.build_fallback_schedule(req, candidate_places)
+    day1 = fallback.dailySchedules[0]
+    last_place = day1.places[-1]
+    
+    # 마지막 장소의 종료 시각 확인
+    last_end_hour = int(last_place.endTime.split(":")[0])
+    assert last_end_hour <= 21
+    # 24:00, 25:00 등의 유효하지 않은 시각이 없음을 확인
+    for p in day1.places:
+        h = int(p.endTime.split(":")[0])
+        assert 0 <= h <= 21
+
+
+
 
 

@@ -397,15 +397,34 @@ class AIScheduleService:
         # 동선 정렬
         ordered_spots = route_planner.optimize_spot_order(selected)
 
-        # 시간표 조립
+        # 시간표 조립 및 순차 이동 거리 계산 (현재위치 -> 장소1 -> 장소2 ... 순차 누적)
         result_places: List[AISchedulePlace] = []
-        start_hour = 14
+        curr_lat = req.currentLatitude
+        curr_lon = req.currentLongitude
         curr_dist_total = 0.0
 
+        # 기본 시작 시각 (14:00) 및 종료 상한 (21:00) 분 단위 연산
+        curr_time_min = 14 * 60
+        max_end_time_min = 21 * 60
+
         for idx, spot in enumerate(ordered_spots, start=1):
-            start_str = f"{start_hour + idx - 1}:00"
-            end_str = f"{start_hour + idx}:30"
-            curr_dist_total += spot["distance_km"]
+            # 직전 지점(첫 장소는 사용자 현재 위치)으로부터의 실제 순차 이동 거리
+            leg_dist = route_planner.calculate_distance_km(
+                curr_lat, curr_lon,
+                spot["latitude"], spot["longitude"]
+            )
+            curr_dist_total += leg_dist
+            travel_min = route_planner.estimate_travel_time_min(leg_dist)
+
+            # 이동 시간 반영 후 시작 시각 산출 (최대 20:30 이전 시작)
+            start_min = min(curr_time_min + travel_min, max_end_time_min - 30)
+            stay_min = 90
+            # 21:00를 초과하지 않도록 종료 시각 클램핑
+            end_min = min(start_min + stay_min, max_end_time_min)
+            actual_stay = max(30, end_min - start_min)
+
+            start_str = f"{start_min // 60:02d}:{start_min % 60:02d}"
+            end_str = f"{end_min // 60:02d}:{end_min % 60:02d}"
 
             result_places.append(
                 AISchedulePlace(
@@ -415,13 +434,20 @@ class AIScheduleService:
                     category=spot["category"],
                     startTime=start_str,
                     endTime=end_str,
-                    stayTimeMinutes=90,
+                    stayTimeMinutes=actual_stay,
                     latitude=spot["latitude"],
                     longitude=spot["longitude"],
+                    distanceFromPrevKm=round(leg_dist, 2),
+                    estimatedTravelMinutes=travel_min,
                     reason=f"갑작스러운 {req.newWeatherCondition} 날씨에 안전하고 쾌적하게 머무를 수 있는 실내 명소로 선정되었습니다.",
                     address=spot.get("address"),
                 )
             )
+
+            # 다음 스팟의 출발점 및 시작 시간 갱신
+            curr_lat = spot["latitude"]
+            curr_lon = spot["longitude"]
+            curr_time_min = end_min
 
         return AIRescheduleResponse(
             message=f"갑작스러운 {req.newWeatherCondition} 예보에 따라 현재 위치 반경 {req.radiusKm}km 내 실내 대체 코스로 동선이 재조정되었습니다.",

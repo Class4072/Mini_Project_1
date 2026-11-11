@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
+from app.core.logger import app_logger
 from app.api.deps import get_db
 from app.services.ai_schedule_service import ai_schedule_service
 from app.schemas.ai import (
@@ -36,9 +38,15 @@ async def generate_schedule(
             detail=str(e),
         )
     except Exception as e:
+        app_logger.exception(f"❌ [일정 생성 시스템 오류] {e}")
+        error_detail = (
+            f"일정 생성 중 시스템 오류가 발생했습니다: {str(e)}"
+            if settings.DEBUG
+            else "일정 생성 처리 중 시스템 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"일정 생성 중 시스템 오류가 발생했습니다: {str(e)}",
+            detail=error_detail,
         )
 
 
@@ -64,8 +72,14 @@ async def reschedule(
             detail=str(e),
         )
     except Exception as e:
+        app_logger.exception(f"❌ [대체 일정 재추천 시스템 오류] {e}")
+        error_detail = (
+            f"대체 일정 재추천 중 시스템 오류가 발생했습니다: {str(e)}"
+            if settings.DEBUG
+            else "대체 일정 재추천 처리 중 시스템 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"대체 일정 재추천 중 시스템 오류가 발생했습니다: {str(e)}",
+            detail=error_detail,
         )
 

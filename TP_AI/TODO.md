@@ -6,9 +6,9 @@
   - 여행 기간 상한 검증 (`travel_days <= 14일`) 추가로 무한 일정 생성 요청 방어
   - 연계 가능 지역 수 제한 (`regionCodes <= 5개`) 추가
   - 인원 수 상한 제한 (`travelerCount <= 100명`) 추가
-- [ ] **CWE-209 (민감 내부 시스템 정보 노출 방지)**:
-  - `endpoints/ai.py` 및 `endpoints/travel.py`의 `HTTPException(500, detail=str(e))` 개선
-  - 프로덕션(`settings.DEBUG == False`) 시 정제된 사용자 메시지만 노출하고 상세 스택트레이스는 서버 로그(`app_logger.exception`)에만 기록
+- [x] **CWE-209 (민감 내부 시스템 정보 노출 방지)**:
+  - `endpoints/ai.py` 및 `endpoints/travel.py`의 `HTTPException(500, detail=...)` 개선 완료
+  - `settings.DEBUG == False` 시 내부 상세 에러 은폐 및 표준 안내 메시지 반환, 스택트레이스는 서버 로그(`app_logger.exception`)에만 안전하게 기록
 - [ ] **CWE-770 (HTTP Client 커넥션 누수 방지 및 풀링)**:
   - `app/core/llm_client.py`에서 매 호출마다 `httpx.AsyncClient`를 생성/폐기하는 구조 개선
   - 커넥션 풀(`max_keepalive_connections=20`) 및 수명주기 관리(`lifespan shutdown`) 적용
@@ -19,16 +19,14 @@
 
 ## ⚙️ 2. 비즈니스 로직 및 시스템 결함 보완 계획 (Defects & Logic Fixes)
 
-- [x] **카카오맵 뷰포트 메타데이터 계산 엔진 구현**:
-  - `RoutePlanner.calculate_map_viewport(spots)` 구현 완료 (남북/동서 bounds 및 중심 좌표 계산)
-  - `estimate_travel_time_min(distance_km, transport)` 이동 수단(CAR, PUBLIC_TRANSIT, WALK)별 굴곡률 및 버퍼 시간 반영
 - [x] **AI 환각 검출기(`verify_candidates_integrity`) 엄격화**:
   - "카페", "식당", "공원" 등 일반 명사 악용 및 1~2글자 느슨한 부분 일치 허점 차단
   - 3글자 이상 및 상호 길이 비율 50% 이상일 때만 유사 인정
-- [ ] **실시간 대체 일정(`reschedule`) 누적 이동 거리 왜곡 결함 수정**:
-  - 기존 `(현재위치->스팟A) + (현재위치->스팟B)` 단순 합산에서 `현재위치 -> 스팟1 -> 스팟2 -> 스팟3` 실제 순차 주행 시퀀스 누적 거리로 수정
-- [ ] **일정 시각 24시 오버플로우 방지 및 시간대 정규화**:
-  - `reschedule()` 및 `build_fallback_schedule()`에서 21:00 이후로 넘어가지 않도록 시각 클램핑 및 `f"{h:02d}:00"` 형식 보장
+- [x] **실시간 대체 일정(`reschedule`) 누적 이동 거리 왜곡 결함 수정**:
+  - 기존 `(현재위치->스팟A) + (현재위치->스팟B)` 단순 합산에서 `현재위치 ➡️ 스팟1 ➡️ 장소2 ➡️ 장소3` 실제 순차 주행 시퀀스 누적 거리(`totalDistanceKm`)로 교정 완료
+  - 각 스팟별 구간 이동거리(`distanceFromPrevKm`) 및 이동시간(`estimatedTravelMinutes`) 정상 바인딩
+- [x] **일정 시각 24시 오버플로우 방지 및 시간대 정규화**:
+  - `reschedule()` 및 `build_fallback_schedule()`에서 명세서 규격(종료는 모두 21:00)에 맞추어 21:00 이전으로 클램핑 및 두 자릿수 포맷(`f"{h:02d}:00"`) 정규화 완료
 - [ ] **FastAPI 이벤트 루프 블로킹 해소 (PyTorch CPU 연산 격리)**:
   - `SentenceTransformer.encode()` 연산을 `await asyncio.to_thread()`로 감싸 비동기 워커 스레드 풀에서 실행
 - [ ] **대량 스팟 등록 시 N+1 `refresh()` 비동기 DB I/O 병목 제거**:
