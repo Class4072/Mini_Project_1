@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Optional
+from typing import Optional, List
 
 
 class Settings(BaseSettings):
@@ -8,11 +8,22 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     HOST: str = "0.0.0.0"
     PORT: int = 8000
+    CORS_ORIGINS: List[str] = ["*"]
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/vector_db"
+    REDIS_URL: Optional[str] = None
 
-    # Embedding
+    # LLM Provider Configuration
+    LLM_PROVIDER: str = "ollama"  # ollama | gemini | openai | mock
+    LLM_MODEL_NAME: str = "llama3:8b"
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    GEMINI_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: Optional[str] = None
+    LLM_TIMEOUT_SECONDS: float = 30.0
+
+    # Embedding Provider Configuration
+    EMBEDDING_PROVIDER: str = "local"  # local | openai
     EMBEDDING_MODEL_NAME: str = "jhgan/ko-sroberta-multitask"
     EMBEDDING_DIMENSION: int = 768
     EMBEDDING_DEVICE: str = "cpu"
@@ -29,3 +40,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+

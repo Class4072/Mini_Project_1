@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict, Any, Tuple
 from uuid import UUID
-from datetime import timedelta
+from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, func, and_, or_
@@ -63,9 +63,9 @@ class TravelService:
         db: AsyncSession,
         spot_in: TravelSpotCreate,
     ) -> TravelSpotResponse:
-        """단건 여행 스팟 등록 및 768차원 임베딩 생성"""
+        """단건 여행 스팟 등록 및 768차원 임베딩 생성 (비동기 스레드 풀 위임)"""
         emb_text = self._build_embedding_text(spot_in)
-        vector = embedding_service.embed_text(emb_text)
+        vector = await embedding_service.embed_text_async(emb_text)
 
         db_spot = TravelSpot(
             name=spot_in.name,
@@ -89,12 +89,12 @@ class TravelService:
         db: AsyncSession,
         bulk_in: BulkTravelSpotCreate,
     ) -> List[TravelSpotResponse]:
-        """여러 여행 스팟을 일괄 등록하고 배치 단위로 임베딩 인퍼런스 수행"""
+        """여러 여행 스팟을 일괄 등록하고 배치 단위로 비동기 임베딩 인퍼런스 수행 (N+1 I/O 제거)"""
         if not bulk_in.spots:
             return []
 
         emb_texts = [self._build_embedding_text(s) for s in bulk_in.spots]
-        vectors = embedding_service.embed_batch(emb_texts)
+        vectors = await embedding_service.embed_batch_async(emb_texts)
 
         db_spots = []
         for s_in, vec in zip(bulk_in.spots, vectors):
@@ -113,9 +113,7 @@ class TravelService:
             db_spots.append(spot)
 
         await db.commit()
-        for s in db_spots:
-            await db.refresh(s)
-
+        # N+1 단건 refresh() 루프 제거: 커밋된 인메모리 엔티티 리스트로 즉시 변환
         return [self._to_response(s) for s in db_spots]
 
     async def get_spot(self, db: AsyncSession, spot_id: UUID) -> Optional[TravelSpotResponse]:
@@ -172,8 +170,8 @@ class TravelService:
         top_k: int = 10,
         use_hybrid: bool = True,
     ) -> List[Dict[str, Any]]:
-        """장소 시맨틱 벡터 검색"""
-        query_vec = embedding_service.embed_text(query)
+        """장소 시맨틱 벡터 검색 (비동기 스레드 풀 위임)"""
+        query_vec = await embedding_service.embed_text_async(query)
         cosine_dist = TravelSpot.embedding.cosine_distance(query_vec)
         cosine_sim = (1.0 - cosine_dist).label("similarity")
 
@@ -218,7 +216,7 @@ class TravelService:
         else:
             search_prompt = f"{req.region} 대표 명소 관광지 놀거리 힐링 감성 카페 맛집 {season_name} {companion_label} 추천 코스"
 
-        query_vec = embedding_service.embed_text(search_prompt)
+        query_vec = await embedding_service.embed_text_async(search_prompt)
 
         # 4. 해당 지역 내 후보 스팟 조회 (pgvector 코사인 유사도)
         cosine_dist = TravelSpot.embedding.cosine_distance(query_vec)
@@ -361,6 +359,7 @@ class TravelService:
         )
 
     def _to_response(self, spot: TravelSpot) -> TravelSpotResponse:
+        now = datetime.now(timezone.utc)
         return TravelSpotResponse(
             id=spot.id,
             name=spot.name,
@@ -371,8 +370,8 @@ class TravelService:
             longitude=spot.longitude,
             description=spot.description,
             metadata=spot.spot_metadata,
-            created_at=spot.created_at,
-            updated_at=spot.updated_at,
+            created_at=spot.created_at or now,
+            updated_at=spot.updated_at or now,
         )
 
 

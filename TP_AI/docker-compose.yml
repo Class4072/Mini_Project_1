@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL with pgvector extension
+  tour_db:
+    image: pgvector/pgvector:pg16
+    container_name: tour_postgres_vector
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: vector_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vector_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Ollama Local LLM Engine (Llama 3 / Qwen 서빙)
+  tour_ollama:
+    image: ollama/ollama:latest
+    container_name: tour_ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # Apple Silicon or Nvidia GPU pass-through 지원 시 주석 해제 가능
+
+volumes:
+  pgvector_data:
+    driver: local
+  ollama_data:
+    driver: local
+
