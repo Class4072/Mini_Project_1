@@ -1,0 +1,23 @@
+.submit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.submitError {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-danger);
+}
+
+.submitButton {
+  width: 100%;
+  font-weight: 800;
+}
+
+.submitNote {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  text-align: center;
+}

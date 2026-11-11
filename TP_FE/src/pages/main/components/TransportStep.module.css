@@ -1,0 +1,53 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 92px;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  text-align: left;
+}
+
+.iconBox {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-sub);
+  color: var(--color-ink-soft);
+}
+
+.card[aria-pressed="true"] .iconBox {
+  background-color: var(--color-surface);
+  color: var(--color-primary-ink);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.name {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.card[aria-pressed="true"] .name {
+  font-weight: 800;
+}
+
+.description {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-ink-soft);
+}
