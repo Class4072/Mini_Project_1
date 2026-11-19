@@ -4,6 +4,10 @@ export const STEPS = ["region", "date", "companion", "travelerCount", "transport
 export const REQUIRED_STEPS = ["date", "companion", "travelerCount", "transport"];
 
 // 지역 코드는 TourAPI areaCode 가정. 배열 순서 = 화면 표시 순서.
+// value: 화면에서 지역을 구분하는 키(선택 상태·지도 좌표의 키).
+// areaCodes: 백엔드 요청에 보낼 TourAPI 지역코드. 없으면 [value].
+// 전남광주통합특별시(2026-07-01 출범)는 화면에서 한 지역으로 보이고, 데이터는 TourAPI 기존 코드(전남 38·광주 5)로 나뉘어 있어 둘 다 보낸다.
+// TODO: 백엔드가 통합 지역코드를 지원하면 areaCodes 를 그 코드 하나로 바꾼다.
 export const REGIONS = [
   { value: "1", label: "서울" },
   { value: "2", label: "인천" },
@@ -19,8 +23,7 @@ export const REGIONS = [
   { value: "6", label: "부산" },
   { value: "36", label: "경남" },
   { value: "37", label: "전북" },
-  { value: "38", label: "전남" },
-  { value: "5", label: "광주" },
+  { value: "38", label: "전남광주", areaCodes: ["38", "5"] },
   { value: "39", label: "제주" },
 ];
 
@@ -91,3 +94,10 @@ export const MAX_TRIP_DAYS = null; // 여행 기간(출발일·도착일 포함 
 export const MAX_DAYS_AHEAD = null; // 오늘로부터 출발일까지 최대 일수
 export const MAX_TRAVELERS = null;
 export const MAX_THEMES = 3;
+
+// 선택한 지역 value → 백엔드에 보낼 TourAPI 지역코드 목록
+export function toAreaCodes(regionValue) {
+  const region = REGIONS.find((r) => r.value === regionValue);
+  if (!region) return [regionValue];
+  return region.areaCodes ?? [region.value];
+}

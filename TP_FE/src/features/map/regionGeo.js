@@ -21,9 +21,9 @@ export const REGION_GEO = {
   6: { center: { lat: 35.1798, lng: 129.075 }, label: { lat: 35.1, lng: 129.1 }, level: 9 }, // 부산
   36: { center: { lat: 35.2383, lng: 128.6922 }, label: { lat: 35.35, lng: 128.2 }, level: 11 }, // 경남 (창원)
   37: { center: { lat: 35.8203, lng: 127.1089 }, level: 11 }, // 전북 (전주)
-  38: { center: { lat: 34.8161, lng: 126.4629 }, level: 11 }, // 전남 (무안)
-  // 광주 label: 카카오 지도 자체의 "광주" 글자와 겹치지 않게 북서쪽으로
-  5: { center: { lat: 35.1601, lng: 126.8514 }, label: { lat: 35.25, lng: 126.8 }, level: 9 }, // 광주
+  // 전남광주 (옛 전남 + 광주). center 는 광주~무안 사이로 옮겨 통합 지역 전체가 보이게 한다.
+  // label 은 카카오 지도 자체의 "전남광주" 글자와 겹치지 않게 남서쪽(옛 전남 라벨 자리 근처)
+  38: { center: { lat: 34.95, lng: 126.75 }, label: { lat: 34.8161, lng: 126.4629 }, level: 11 },
   // 전국 보기에서 화면 밖에 있는 지역은 지도 위 고정 바로가기로 표시 (shortcut: true)
   39: { center: { lat: 33.489, lng: 126.4983 }, level: 10, shortcut: true }, // 제주
 };

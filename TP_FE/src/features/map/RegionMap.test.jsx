@@ -5,7 +5,7 @@ import { NATIONAL_VIEW, REGION_GEO } from "./regionGeo";
 
 jest.mock("./mapProvider");
 
-// regionGeo 에 있는 17개 코드. 이름은 테스트용.
+// regionGeo 에 있는 16개 코드. 이름은 테스트용.
 const REGIONS = Object.keys(REGION_GEO).map((code) => ({ code, name: `지역${code}` }));
 REGIONS.find((r) => r.code === "6").name = "부산";
 REGIONS.find((r) => r.code === "39").name = "제주";
@@ -39,12 +39,12 @@ describe("RegionMap", () => {
     expect(screen.queryByText("지도를 불러오는 중이에요")).not.toBeInTheDocument();
   });
 
-  it("지역 미선택이면 라벨 17개를 모두 default 로 넘기고, 라벨 클릭은 onSelectRegion 을 부른다", async () => {
+  it("지역 미선택이면 라벨 16개를 모두 default 로 넘기고, 라벨 클릭은 onSelectRegion 을 부른다", async () => {
     const onSelectRegion = jest.fn();
     await renderReady({ selectedRegionCode: null, onSelectRegion });
 
     const labels = lastLabels();
-    expect(labels).toHaveLength(17);
+    expect(labels).toHaveLength(16);
     expect(labels.every((label) => label.state === "default")).toBe(true);
     expect(handle().focus).not.toHaveBeenCalled();
 
@@ -80,7 +80,7 @@ describe("RegionMap", () => {
     );
     const labels = lastLabels();
     expect(labels.filter((label) => label.state === "selected").map((l) => l.code)).toEqual(["6"]);
-    expect(labels.filter((label) => label.state === "dimmed")).toHaveLength(16);
+    expect(labels.filter((label) => label.state === "dimmed")).toHaveLength(15);
     expect(screen.getByText("부산")).toBeInTheDocument();
 
     // 지역 바꾸기 팝업으로 지역이 바뀌면 새 지역으로 다시 focus
@@ -98,7 +98,7 @@ describe("RegionMap", () => {
       selectedRegionCode: null,
     });
 
-    expect(lastLabels()).toHaveLength(17);
+    expect(lastLabels()).toHaveLength(16);
     expect(lastLabels().some((label) => label.code === "999")).toBe(false);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("999"));
     warn.mockRestore();

@@ -50,11 +50,11 @@ describe("MainPage", () => {
     jest.useRealTimers();
   });
 
-  it("첫 화면에 17개 지역 버튼이 보인다", () => {
+  it("첫 화면에 16개 지역 버튼이 보인다", () => {
     renderMainPage();
     expect(screen.getByRole("heading", { name: /어디로 떠날까요\?/ })).toBeInTheDocument();
     const grid = screen.getByRole("heading", { name: "지역 고르기" }).nextElementSibling;
-    expect(within(grid).getAllByRole("button")).toHaveLength(17);
+    expect(within(grid).getAllByRole("button")).toHaveLength(16);
     expect(within(mapArea()).getByText("지도를 불러오는 중이에요")).toBeInTheDocument();
   });
 
