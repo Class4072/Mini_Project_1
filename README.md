@@ -3,7 +3,8 @@
 AI와 공공데이터(한국관광공사 TourAPI, 기상청 예보)를 바탕으로 여행 일정과 최적 동선을 추천하는 플랫폼입니다.
 
 전체 아키텍처, 서비스 흐름, 기술 스택, 협업 규칙은 [ROOT.md](./ROOT.md)에 정리되어 있습니다.
-서비스들이 함께 쓰는 DB 테이블 구조는 [DATABASE.md](./DATABASE.md)(초안)에 있습니다.
+서비스들이 함께 쓰는 DB 테이블 구조는 [TP_DOCS/database/DATABASE.md](./TP_DOCS/database/DATABASE.md)(초안)에 있습니다.
+프로젝트 공통 문서(인프라·배포, 결정 기록, 회의록 등)의 목차는 [TP_DOCS](./TP_DOCS/README.md)에 있습니다.
 
 ## 저장소 구성
 
@@ -11,8 +12,8 @@ AI와 공공데이터(한국관광공사 TourAPI, 기상청 예보)를 바탕으
 | :--- | :--- | :--- | :--- | :--- |
 | [TP_AI](./TP_AI) | RAG 장소 추천, 동선 최적화 | Python, FastAPI, pgvector | [AI.md](./TP_AI/AI.md) | 코드 있음 |
 | [TP_BATCH](./TP_BATCH) | TourAPI 수집·정제, 임베딩 적재 | Python, PostgreSQL, APScheduler | [BATCH.md](./TP_BATCH/BATCH.md) | 코드 있음 |
-| [TP_BE](./TP_BE) | 여행 REST API, AI 서비스 연동 | Kotlin, Spring Boot | [BACKEND.md](./TP_BE/BACKEND.md) | 명세만 있음 |
-| [TP_FE](./TP_FE) | 카카오맵 기반 일정·동선 화면 | React, TypeScript, Vite | [FRONTEND.md](./TP_FE/FRONTEND.md) | 명세만 있음 |
+| [TP_BE](./TP_BE) | 여행 REST API, AI 서비스 연동 | Kotlin, Spring Boot | [BACKEND.md](./TP_BE/BACKEND.md) | 코드 있음 |
+| [TP_FE](./TP_FE) | 카카오맵 기반 일정·동선 화면 | React (JavaScript), Vite | [FRONTEND.md](./TP_FE/FRONTEND.md) | 코드 있음 (메인 화면) |
 
 각 서비스의 설계와 실행 방법은 해당 폴더의 명세 문서(AI.md, BATCH.md, BACKEND.md, FRONTEND.md)를 참고하세요.
 
