@@ -1,0 +1,14 @@
+.gradle
+.kotlin
+build
+**/build
+out
+.idea
+*.iml
+.env
+.env.*
+!.env.example
+Dockerfile
+.dockerignore
+*.md
+.DS_Store
