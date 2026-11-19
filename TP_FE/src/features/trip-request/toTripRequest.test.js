@@ -35,4 +35,9 @@ describe("toTripRequest", () => {
     expect(body).toMatchObject({ themes: [], placesPerDay: "NORMAL", startTime: "NORMAL" });
     expect(body).not.toHaveProperty("currentStep");
   });
+
+  it("전남광주를 고르면 TourAPI 지역코드 전남(38)·광주(5)를 함께 보낸다", () => {
+    const state = { ...initialTripRequestState, regionCode: "38" };
+    expect(toTripRequest(state).regionCodes).toEqual(["38", "5"]);
+  });
 });
