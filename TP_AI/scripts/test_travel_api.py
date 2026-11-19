@@ -29,6 +29,7 @@ def test_travel_api():
             "person_count": 2,
             "theme_or_keyword": "바다 전망과 감성 카페 투어",
             "spots_per_day": 2,
+            "include_ai_story": False,  # 단위 테스트 고속 실행을 위해 기본 비활성화
         }
         res = client.post("/api/v1/travel/recommend", json=recommend_payload)
         print(f"Status Code: {res.status_code}")

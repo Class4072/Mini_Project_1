@@ -60,6 +60,8 @@ class TravelRecommendRequest(BaseModel):
         description="추가 선호 테마나 키워드 (선택 사항, 예: '바다 뷰와 감성 카페', '아이와 함께 갈 실내 놀거리')",
     )
     spots_per_day: int = Field(3, ge=2, le=6, description="하루 권장 방문 스팟 수 (기본값: 3개)")
+    transportation: Optional[str] = Field("자동차", description="이동 수단 (자동차, 대중교통 등)")
+    include_ai_story: bool = Field(True, description="Ollama LLM 맞춤 일정 스토리 포함 여부")
 
 
 class RouteStep(BaseModel):
@@ -103,6 +105,13 @@ class WeatherSummary(BaseModel):
     travel_tip: str = Field(..., description="날씨에 맞춘 추천 복장 및 활동 팁")
 
 
+class AIItineraryResponse(BaseModel):
+    model: str = Field(..., description="사용된 LLM 모델명")
+    generation_time_sec: float = Field(..., description="생성 소요 시간 (초)")
+    content: str = Field(..., description="생성된 맞춤형 추천 일정 및 스토리")
+    tokens: int = Field(0, description="생성된 토큰 수")
+
+
 class TravelRecommendResponse(BaseModel):
     request_summary: Dict[str, Any] = Field(..., description="입력받은 여행 조건 요약")
     destination_summary: DestinationSummary = Field(..., description="추천 지역 정보")
@@ -111,6 +120,9 @@ class TravelRecommendResponse(BaseModel):
     total_days: int = Field(..., description="총 여행 일수")
     total_spots_count: int = Field(..., description="총 추천 스팟 수")
     total_itinerary_distance_km: float = Field(..., description="전체 일정 총 이동 거리 (km)")
+    ai_itinerary: Optional[AIItineraryResponse] = Field(
+        None, description="Ollama LLM이 생성한 맞춤형 추천 일정 스토리 및 팁"
+    )
 
 
 # --- Search Schemas ---

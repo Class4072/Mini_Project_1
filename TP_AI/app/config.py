@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     DEFAULT_CHUNK_SIZE: int = 500
     DEFAULT_CHUNK_OVERLAP: int = 50
 
+    # Ollama LLM
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "travel-llama3"
+    OLLAMA_TIMEOUT_SEC: int = 180
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

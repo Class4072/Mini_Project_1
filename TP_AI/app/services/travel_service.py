@@ -16,10 +16,12 @@ from app.schemas.travel import (
     WeatherSummary,
     ItineraryDay,
     RouteStep,
+    AIItineraryResponse,
 )
 from app.core.embedding import embedding_service
 from app.core.route_planner import route_planner
 from app.core.weather_advisor import weather_advisor
+from app.core.llm_advisor import llm_advisor
 
 
 class TravelService:
@@ -343,6 +345,29 @@ class TravelService:
             travel_tip=weather_info["travel_tip"],
         )
 
+        # 9. Ollama travel-llama3 LLM 맞춤 일정 및 감성 스토리 생성
+        ai_itinerary_dto = None
+        if req.include_ai_story:
+            llm_res = await llm_advisor.generate_itinerary_story(
+                region=matched_region,
+                start_date=str(req.start_date),
+                end_date=str(req.end_date) if req.end_date else str(req.start_date),
+                travel_days=travel_days,
+                person_count=req.person_count,
+                companion_label=companion_label,
+                theme=theme_text,
+                transportation=req.transportation or "자동차",
+                spots=scored_spots,
+                weather_info=weather_info,
+            )
+            if llm_res:
+                ai_itinerary_dto = AIItineraryResponse(
+                    model=llm_res["model"],
+                    generation_time_sec=llm_res["generation_time_sec"],
+                    content=llm_res["content"],
+                    tokens=llm_res.get("tokens", 0),
+                )
+
         return TravelRecommendResponse(
             request_summary={
                 "region": req.region,
@@ -351,6 +376,8 @@ class TravelService:
                 "person_count": req.person_count,
                 "theme_or_keyword": req.theme_or_keyword,
                 "spots_per_day": req.spots_per_day,
+                "transportation": req.transportation,
+                "include_ai_story": req.include_ai_story,
             },
             destination_summary=destination_summary,
             weather_summary=weather_summary,
@@ -358,6 +385,7 @@ class TravelService:
             total_days=len(itinerary),
             total_spots_count=total_spots_count,
             total_itinerary_distance_km=total_itinerary_distance,
+            ai_itinerary=ai_itinerary_dto,
         )
 
     def _to_response(self, spot: TravelSpot) -> TravelSpotResponse:
