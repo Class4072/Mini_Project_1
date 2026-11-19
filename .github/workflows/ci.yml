@@ -1,4 +1,4 @@
-# TP CI: PR 마다 바뀐 서비스만 lint·test 후 Docker 이미지 빌드까지 확인한다 (레지스트리 push 없음).
+# TP CI: PR 마다 바뀐 서비스만 lint·test 한다. Docker 이미지 빌드는 develop push 와 이미지 관련 파일이 바뀐 PR 에서만 (레지스트리 push 없음).
 # 배포(CD)는 보류 → 맥미니에서 scripts/deploy-macmini.sh 로 수동 배포.
 name: CI
 
@@ -26,6 +26,10 @@ jobs:
       be: ${{ steps.filter.outputs.be }}
       ai: ${{ steps.filter.outputs.ai }}
       batch: ${{ steps.filter.outputs.batch }}
+      fe_image: ${{ steps.filter.outputs.fe_image }}
+      be_image: ${{ steps.filter.outputs.be_image }}
+      ai_image: ${{ steps.filter.outputs.ai_image }}
+      batch_image: ${{ steps.filter.outputs.batch_image }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -44,6 +48,30 @@ jobs:
               - '.github/workflows/ci.yml'
             batch:
               - 'TP_BATCH/**'
+              - '.github/workflows/ci.yml'
+            # PR 에서는 이미지 빌드에 영향을 주는 파일이 바뀔 때만 docker build 를 돌린다
+            fe_image:
+              - 'TP_FE/Dockerfile'
+              - 'TP_FE/.dockerignore'
+              - 'TP_FE/nginx/**'
+              - 'TP_FE/package.json'
+              - 'TP_FE/package-lock.json'
+              - '.github/workflows/ci.yml'
+            be_image:
+              - 'TP_BE/Dockerfile'
+              - 'TP_BE/.dockerignore'
+              - 'TP_BE/**/*.gradle.kts'
+              - 'TP_BE/gradle/**'
+              - '.github/workflows/ci.yml'
+            ai_image:
+              - 'TP_AI/Dockerfile'
+              - 'TP_AI/.dockerignore'
+              - 'TP_AI/requirements.txt'
+              - '.github/workflows/ci.yml'
+            batch_image:
+              - 'TP_BATCH/Dockerfile'
+              - 'TP_BATCH/.dockerignore'
+              - 'TP_BATCH/requirements*.txt'
               - '.github/workflows/ci.yml'
 
   fe:
@@ -65,15 +93,19 @@ jobs:
       - run: npm run lint
       - run: npm test -- --ci --passWithNoTests
       - run: npm run build
+      # 이미지 빌드: develop push 는 항상(캐시 저장), PR 은 이미지 관련 파일이 바뀐 경우만
       - uses: docker/setup-buildx-action@v3
+        if: github.event_name != 'pull_request' || needs.changes.outputs.fe_image == 'true'
       - name: Docker 이미지 빌드
+        if: github.event_name != 'pull_request' || needs.changes.outputs.fe_image == 'true'
         uses: docker/build-push-action@v6
         with:
           context: TP_FE
           push: false
           tags: tp-fe:ci
           cache-from: type=gha,scope=fe
-          cache-to: type=gha,mode=max,scope=fe
+          # 캐시 내보내기(30~45초)는 develop push 에서만. PR 은 develop 캐시를 읽기만 한다
+          cache-to: ${{ github.event_name == 'push' && 'type=gha,mode=max,scope=fe' || '' }}
 
   be:
     name: BE (ktlint · test · image)
@@ -90,11 +122,16 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew --no-daemon ktlintCheck
-      # Testcontainers 테스트는 러너의 Docker 를 사용한다
-      - run: ./gradlew --no-daemon test
+        with:
+          # 기본값은 기본 브랜치(main)에서만 캐시를 저장한다 → develop push 에서도 저장하도록
+          cache-read-only: ${{ github.ref != 'refs/heads/develop' }}
+      # ktlint 와 테스트를 Gradle 한 번에 (Testcontainers 테스트는 러너의 Docker 사용)
+      - run: ./gradlew ktlintCheck test
+      # 이미지 빌드: develop push 는 항상(캐시 저장), PR 은 이미지 관련 파일이 바뀐 경우만
       - uses: docker/setup-buildx-action@v3
+        if: github.event_name != 'pull_request' || needs.changes.outputs.be_image == 'true'
       - name: Docker 이미지 빌드
+        if: github.event_name != 'pull_request' || needs.changes.outputs.be_image == 'true'
         uses: docker/build-push-action@v6
         with:
           context: TP_BE
@@ -102,7 +139,8 @@ jobs:
           push: false
           tags: tp-be:ci
           cache-from: type=gha,scope=be
-          cache-to: type=gha,mode=max,scope=be
+          # 캐시 내보내기(30~45초)는 develop push 에서만. PR 은 develop 캐시를 읽기만 한다
+          cache-to: ${{ github.event_name == 'push' && 'type=gha,mode=max,scope=be' || '' }}
 
   ai:
     name: AI (문법 검사 · image)
@@ -116,15 +154,19 @@ jobs:
           python-version: '3.11'
       # 테스트(pytest)가 저장소에 들어오면 여기에 추가한다
       - run: python -m compileall -q TP_AI/app
+      # 이미지 빌드: develop push 는 항상(캐시 저장), PR 은 이미지 관련 파일이 바뀐 경우만
       - uses: docker/setup-buildx-action@v3
+        if: github.event_name != 'pull_request' || needs.changes.outputs.ai_image == 'true'
       - name: Docker 이미지 빌드
+        if: github.event_name != 'pull_request' || needs.changes.outputs.ai_image == 'true'
         uses: docker/build-push-action@v6
         with:
           context: TP_AI
           push: false
           tags: tp-ai:ci
           cache-from: type=gha,scope=ai
-          cache-to: type=gha,mode=max,scope=ai
+          # 캐시 내보내기(30~45초)는 develop push 에서만. PR 은 develop 캐시를 읽기만 한다
+          cache-to: ${{ github.event_name == 'push' && 'type=gha,mode=max,scope=ai' || '' }}
 
   batch:
     name: BATCH (문법 검사 · image)
@@ -137,12 +179,16 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m compileall -q TP_BATCH/app
+      # 이미지 빌드: develop push 는 항상(캐시 저장), PR 은 이미지 관련 파일이 바뀐 경우만
       - uses: docker/setup-buildx-action@v3
+        if: github.event_name != 'pull_request' || needs.changes.outputs.batch_image == 'true'
       - name: Docker 이미지 빌드
+        if: github.event_name != 'pull_request' || needs.changes.outputs.batch_image == 'true'
         uses: docker/build-push-action@v6
         with:
           context: TP_BATCH
           push: false
           tags: tp-batch:ci
           cache-from: type=gha,scope=batch
-          cache-to: type=gha,mode=max,scope=batch
+          # 캐시 내보내기(30~45초)는 develop push 에서만. PR 은 develop 캐시를 읽기만 한다
+          cache-to: ${{ github.event_name == 'push' && 'type=gha,mode=max,scope=batch' || '' }}
