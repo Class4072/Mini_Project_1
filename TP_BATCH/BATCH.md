@@ -454,5 +454,5 @@ EMBEDDING_MODEL=text-embedding-3-small
 ---
 
 > 💡 **연관 문서**:
-> - RAG 검색 쿼리 및 동선 빌드 엔진: [AI.md](./AI.md)
-> - 백엔드 멀티모듈 및 REST API 명세: [BACKEND.md](./BACKEND.md)
+> - RAG 검색 쿼리 및 동선 빌드 엔진: [AI.md](../TP_AI/AI.md)
+> - 백엔드 멀티모듈 및 REST API 명세: [BACKEND.md](../TP_BE/BACKEND.md)

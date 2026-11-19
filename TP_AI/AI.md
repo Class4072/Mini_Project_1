@@ -553,5 +553,5 @@ REDIS_URL=redis://:tour_redis_pass@localhost:6379/0
 ---
 
 > 💡 **연관 문서**: 
-> - 공공데이터 수집 및 날씨 태그 사전 임베딩 적재: [BATCH.md](./BATCH.md)
-> - 백엔드 API 컨트롤러 및 데이터베이스 스키마: [BACKEND.md](./BACKEND.md)
+> - 공공데이터 수집 및 날씨 태그 사전 임베딩 적재: [BATCH.md](../TP_BATCH/BATCH.md)
+> - 백엔드 API 컨트롤러 및 데이터베이스 스키마: [BACKEND.md](../TP_BE/BACKEND.md)

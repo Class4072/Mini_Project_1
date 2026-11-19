@@ -349,6 +349,6 @@ ai:
 ---
 
 > 💡 **연관 문서**:
-> - AI RAG 검색 및 동선 생성 엔진: [AI.md](./AI.md)
-> - 데이터 수집 및 기상청 날씨 동기화: [BATCH.md](./BATCH.md)
-> - 프론트엔드 카카오맵 및 일정 화면: [FRONTEND.md](./FRONTEND.md)
+> - AI RAG 검색 및 동선 생성 엔진: [AI.md](../TP_AI/AI.md)
+> - 데이터 수집 및 기상청 날씨 동기화: [BATCH.md](../TP_BATCH/BATCH.md)
+> - 프론트엔드 카카오맵 및 일정 화면: [FRONTEND.md](../TP_FE/FRONTEND.md)
