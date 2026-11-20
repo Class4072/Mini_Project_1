@@ -3,16 +3,18 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import text
 from app.config import settings
-import logging
-
-logger = logging.getLogger(__name__)
+from app.core.logger import app_logger
 
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
     future=True,
     pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20,
+    pool_recycle=1800,
 )
+
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
@@ -41,11 +43,12 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 async def init_db():
     """Ensure pgvector extension exists and create all registered tables."""
     async with engine.begin() as conn:
-        logger.info("Checking & enabling pgvector extension...")
+        app_logger.info("Checking & enabling pgvector extension...")
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))  # For enhanced text search
         
-        logger.info("Creating database tables if not exist...")
+        app_logger.info("Creating database tables if not exist...")
         import app.models  # Ensure models are registered to Base.metadata
         await conn.run_sync(Base.metadata.create_all)
-        logger.info("Database initialization completed.")
+        app_logger.info("Database initialization completed.")
+

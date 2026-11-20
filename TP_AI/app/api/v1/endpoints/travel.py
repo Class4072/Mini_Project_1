@@ -3,6 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
+from app.core.logger import app_logger
 from app.api.deps import get_db
 from app.services.travel_service import travel_service
 from app.schemas.travel import (
@@ -40,9 +42,15 @@ async def recommend_travel(
             detail=str(e),
         )
     except Exception as e:
+        app_logger.exception(f"❌ [여행 추천 시스템 오류] {e}")
+        error_detail = (
+            f"여행 추천 생성 중 오류 발생: {str(e)}"
+            if settings.DEBUG
+            else "여행 추천 처리 중 시스템 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"여행 추천 생성 중 오류 발생: {str(e)}",
+            detail=error_detail,
         )
 
 
@@ -70,9 +78,15 @@ async def search_spots(
             "results": results,
         }
     except Exception as e:
+        app_logger.exception(f"❌ [여행지 검색 시스템 오류] {e}")
+        error_detail = (
+            f"여행지 검색 중 오류 발생: {str(e)}"
+            if settings.DEBUG
+            else "여행지 검색 처리 중 시스템 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"여행지 검색 중 오류 발생: {str(e)}",
+            detail=error_detail,
         )
 
 
@@ -90,9 +104,15 @@ async def create_spot(
     try:
         return await travel_service.create_spot(db, spot_in)
     except Exception as e:
+        app_logger.exception(f"❌ [여행지 등록 시스템 오류] {e}")
+        error_detail = (
+            f"여행지 등록 중 오류 발생: {str(e)}"
+            if settings.DEBUG
+            else "여행지 등록 처리 중 시스템 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"여행지 등록 중 오류 발생: {str(e)}",
+            detail=error_detail,
         )
 
 
@@ -110,9 +130,15 @@ async def create_bulk_spots(
     try:
         return await travel_service.create_bulk_spots(db, bulk_in)
     except Exception as e:
+        app_logger.exception(f"❌ [여행지 대량 등록 시스템 오류] {e}")
+        error_detail = (
+            f"여행지 대량 등록 중 오류 발생: {str(e)}"
+            if settings.DEBUG
+            else "여행지 대량 등록 처리 중 시스템 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"여행지 대량 등록 중 오류 발생: {str(e)}",
+            detail=error_detail,
         )
 
 
