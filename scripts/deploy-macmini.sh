@@ -2,6 +2,7 @@
 # 맥미니 개발 서버 배포: 최신 코드 받기 → 이미지 빌드(커밋 SHA 태그) → 컨테이너 교체
 # 사용: ./scripts/deploy-macmini.sh [브랜치명, 기본 develop]
 set -euo pipefail
+export DOCKER_CONTEXT=colima   # 이 스크립트의 docker 명령은 항상 Colima로 보냄
 
 BRANCH="${1:-develop}"
 cd "$(dirname "$0")/.."
