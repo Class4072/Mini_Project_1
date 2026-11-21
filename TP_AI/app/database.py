@@ -41,14 +41,9 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db():
-    """Ensure pgvector extension exists and create all registered tables."""
-    async with engine.begin() as conn:
-        app_logger.info("Checking & enabling pgvector extension...")
-        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))  # For enhanced text search
-        
-        app_logger.info("Creating database tables if not exist...")
-        import app.models  # Ensure models are registered to Base.metadata
-        await conn.run_sync(Base.metadata.create_all)
-        app_logger.info("Database initialization completed.")
+    """Verify database connectivity (read-only mode for tp_ai)."""
+    async with engine.connect() as conn:
+        app_logger.info("Checking database connectivity...")
+        await conn.execute(text("SELECT 1;"))
+        app_logger.info("Database connection verified.")
 

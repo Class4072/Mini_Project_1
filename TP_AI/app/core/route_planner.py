@@ -118,11 +118,11 @@ class RoutePlanner:
         # 1. 카테고리별 분류 풀 생성
         def is_restaurant(s):
             cat = s.get("category", "")
-            return any(k in cat for k in ["맛집", "식당", "음식", "미식", "푸드", "요리", "수산물", "대구탕", "순두부", "고기", "밥"])
+            return cat == "RESTAURANT" or any(k in cat for k in ["맛집", "식당", "음식", "미식", "푸드", "요리", "수산물", "대구탕", "순두부", "고기", "밥"])
 
         def is_cafe(s):
             cat = s.get("category", "")
-            return any(k in cat for k in ["카페", "디저트", "베이커리", "커피", "찻집", "티타임"])
+            return cat == "CAFE" or any(k in cat for k in ["카페", "디저트", "베이커리", "커피", "찻집", "티타임"])
 
         restaurants = [s for s in spots if is_restaurant(s)]
         cafes = [s for s in spots if is_cafe(s)]

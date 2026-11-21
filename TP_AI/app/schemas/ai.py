@@ -1,7 +1,7 @@
 import datetime
 from typing import List, Optional, Union, Any
 from uuid import UUID
-from pydantic import BaseModel, Field, ConfigDict, model_validator
+from pydantic import BaseModel, Field, ConfigDict, model_validator, field_validator
 
 
 # ==============================================================================
@@ -204,6 +204,23 @@ class AISchedulePlace(BaseModel):
     distanceFromPrevKm: Optional[float] = Field(None, description="직전 장소로부터의 이동 거리 (km)")
     estimatedTravelMinutes: Optional[int] = Field(None, description="직전 장소로부터의 예상 이동 시간 (분)")
     transportMode: Optional[str] = Field(None, description="이동 수단 (CAR, PUBLIC_TRANSIT, WALK)")
+
+    @field_validator("startTime", "endTime", mode="before")
+    @classmethod
+    def normalize_time_str(cls, v: Any) -> str:
+        if isinstance(v, (int, float)):
+            hour = int(v)
+            frac = round((v % 1) * 100)
+            minute = frac * 10 if (0 < frac < 10) else min(59, frac)
+            return f"{hour:02d}:{minute:02d}"
+        s = str(v).strip()
+        if ":" in s:
+            try:
+                parts = s.split(":")
+                return f"{int(parts[0]):02d}:{int(parts[1]):02d}"
+            except Exception:
+                return s
+        return s
 
 
 class AIDailySchedule(BaseModel):
