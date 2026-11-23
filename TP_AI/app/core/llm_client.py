@@ -28,7 +28,7 @@ class LLMClient:
 
     def __init__(self):
         self.timeout = settings.LLM_TIMEOUT_SECONDS
-        self.max_retries = 2  # 최초 시도 1회 + 재시도 최대 2회 = 총 3회 시도
+        self.max_retries = 1  # 90초 이내 응답 보장: 최초 시도 1회 + 재시도 최대 1회 (실패 시 즉시 신뢰성 높은 Fallback 전환)
         self._client: Optional[httpx.AsyncClient] = None
 
     def get_client(self) -> httpx.AsyncClient:
@@ -44,10 +44,11 @@ class LLMClient:
             await self._client.aclose()
             self._client = None
 
-    async def _call_provider_raw(self, system_prompt: str, user_prompt: str) -> str:
+    async def _call_provider_raw(self, system_prompt: str, user_prompt: str, timeout_sec: Optional[float] = None) -> str:
         """설정된 LLM_PROVIDER에 따라 비동기 HTTP 호출 수행"""
         provider = settings.LLM_PROVIDER.lower()
         client = self.get_client()
+        call_timeout = timeout_sec or self.timeout
 
         if provider == "ollama":
             url = f"{settings.OLLAMA_BASE_URL.rstrip('/')}/api/generate"
@@ -61,7 +62,7 @@ class LLMClient:
                     "temperature": 0.2,  # 환각 방지를 위한 낮은 온도
                 },
             }
-            res = await client.post(url, json=payload)
+            res = await client.post(url, json=payload, timeout=call_timeout)
             res.raise_for_status()
             data = res.json()
             return data.get("response", "")
@@ -139,8 +140,18 @@ class LLMClient:
         system_prompt = prompt_builder.SYSTEM_PROMPT
         error_feedback: Optional[str] = None
         last_raw_response = ""
+        overall_start = time.perf_counter()
+        deadline_sec = 85.0  # 90초 이내 전체 반환 보장
 
         for attempt in range(1, self.max_retries + 2):
+            elapsed_overall = time.perf_counter() - overall_start
+            remaining_budget = deadline_sec - elapsed_overall
+            if remaining_budget < 15.0:
+                app_logger.warning(
+                    f"⏱️ [시간 예산 초과 방어] 잔여 시간 {remaining_budget:.1f}초 부족으로 Fallback 일정을 즉시 생성합니다."
+                )
+                break
+
             if attempt > 1:
                 backoff_sec = 0.5 * (attempt - 1)
                 app_logger.info(f"⏳ [재시도 백오프 대기] {backoff_sec:.1f}초 후 재요청을 수행합니다...")
@@ -153,12 +164,14 @@ class LLMClient:
             )
 
             start_time = time.perf_counter()
+            call_timeout = min(self.timeout, max(10.0, remaining_budget - 3.0))
             app_logger.info(
-                f"[LLM 호출 시도 {attempt}/{self.max_retries + 1}] provider={settings.LLM_PROVIDER}, model={settings.LLM_MODEL_NAME}"
+                f"[LLM 호출 시도 {attempt}/{self.max_retries + 1}] provider={settings.LLM_PROVIDER}, "
+                f"model={settings.LLM_MODEL_NAME} (timeout={call_timeout:.1f}s, 잔여예산={remaining_budget:.1f}s)"
             )
 
             try:
-                raw_text = await self._call_provider_raw(system_prompt, user_prompt)
+                raw_text = await self._call_provider_raw(system_prompt, user_prompt, timeout_sec=call_timeout)
                 last_raw_response = raw_text
                 duration_ms = (time.perf_counter() - start_time) * 1000
 
@@ -166,11 +179,13 @@ class LLMClient:
                     f"LLM 응답 수신 완료 | latency_ms={duration_ms:.2f}, raw_length={len(raw_text)}"
                 )
 
-                # 1. 응답 파싱 및 환각 검증
+                # 1. 응답 파싱 및 환각 검증 (여행 일수 충족 검증 포함)
+                expected_days = max(1, (req.endDate - req.startDate).days + 1)
                 parsed_schedule = schedule_parser.parse_and_validate(
                     raw_response=raw_text,
                     candidate_places=candidate_places,
                     strict_hallucination_check=True,
+                    expected_days=expected_days,
                 )
 
                 app_logger.info(

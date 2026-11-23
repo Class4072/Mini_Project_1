@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = ["*"]
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/vector_db"
+    DATABASE_URL: str = "postgresql+asyncpg://tp_ai:tp_ai_password@host.docker.internal:5432/tour_db"
     REDIS_URL: Optional[str] = None
 
     # LLM Provider Configuration
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     GEMINI_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
-    LLM_TIMEOUT_SECONDS: float = 60.0
+    LLM_TIMEOUT_SECONDS: float = 55.0
 
     # Embedding Provider Configuration
     EMBEDDING_PROVIDER: str = "local"  # local | openai
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
 
     # Ollama LLM
     OLLAMA_MODEL: str = "travel-llama3"
-    OLLAMA_TIMEOUT_SEC: int = 180
+    OLLAMA_TIMEOUT_SEC: int = 60
 
     model_config = SettingsConfigDict(
         env_file=".env",

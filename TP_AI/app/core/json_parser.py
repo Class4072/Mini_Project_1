@@ -65,8 +65,9 @@ class ScheduleJSONParser:
         raw_response: str,
         candidate_places: List[Dict[str, Any]],
         strict_hallucination_check: bool = True,
+        expected_days: Optional[int] = None,
     ) -> AIScheduleResponse:
-        """LLM 원본 응답 텍스트를 AIScheduleResponse로 구조화하고 환각 여부를 검증합니다.
+        """LLM 원본 응답 텍스트를 AIScheduleResponse로 구조화하고 환각 및 일수를 검증합니다.
         문법 오류 발생 시 1차 자동 복구(Auto-Repair)를 시도합니다.
         """
         # 1. 텍스트 정제
@@ -107,7 +108,17 @@ class ScheduleJSONParser:
                 raw_text=raw_response,
             )
 
-        # 4. 환각(Hallucination) 검증
+        # 4. 여행 일수 무결성 검증
+        if expected_days and len(schedule_response.dailySchedules) < expected_days:
+            app_logger.warning(
+                f"[일수 부족 검출] 요청된 여행 일수({expected_days}일)보다 적은 {len(schedule_response.dailySchedules)}일차만 생성됨"
+            )
+            raise LLMResponseFormatError(
+                f"요청된 여행 일수({expected_days}일)보다 적은 {len(schedule_response.dailySchedules)}일차 일정만 생성되었습니다. Day 1부터 Day {expected_days}까지 빠짐없이 모두 생성해야 합니다.",
+                raw_text=raw_response,
+            )
+
+        # 5. 환각(Hallucination) 검증 및 중복 장소 보정
         if strict_hallucination_check and candidate_places:
             cls.verify_candidates_integrity(schedule_response, candidate_places)
 
@@ -120,18 +131,18 @@ class ScheduleJSONParser:
         schedule: AIScheduleResponse,
         candidate_places: List[Dict[str, Any]],
     ) -> None:
-        """반환된 장소들이 실제 후보 목록에 존재하는지 검증 (AI 환각 방지)"""
-        # 후보 장소들의 ID 및 장소명 집합 생성 (비교 용이하도록 공백/소문자 정규화)
-        valid_ids: Set[str] = set()
-        valid_names: Set[str] = set()
+        """반환된 장소들이 실제 후보 목록에 존재하는지 검증하고, ID 오류 및 중복 방문을 안전하게 자동 복구합니다."""
+        # 후보 장소들의 ID 및 장소명 맵 생성 (비교 용이하도록 공백/소문자 정규화)
+        cand_by_id: Dict[str, Dict[str, Any]] = {}
+        cand_by_name: Dict[str, Dict[str, Any]] = {}
 
         for c in candidate_places:
             c_id = str(c.get("id", "")).strip()
             if c_id:
-                valid_ids.add(c_id)
+                cand_by_id[c_id] = c
             c_name = str(c.get("name", "")).strip().replace(" ", "").lower()
             if c_name:
-                valid_names.add(c_name)
+                cand_by_name[c_name] = c
 
         hallucinated = []
         generic_names = {"카페", "식당", "맛집", "공원", "해변", "바다", "명소", "호텔", "펜션", "숙소"}
@@ -142,24 +153,29 @@ class ScheduleJSONParser:
                 p_name = str(place.placeName).strip().replace(" ", "").lower()
 
                 # 1. ID 일치 확인
-                id_matched = p_id in valid_ids
+                matched_cand = cand_by_id.get(p_id)
 
-                # 2. 이름 일치 정밀 확인 (일반 명사 악용 및 1~2글자 느슨한 부분 일치 방어)
-                name_matched = False
-                if p_name and p_name not in generic_names:
-                    for vn in valid_names:
-                        if p_name == vn:
-                            name_matched = True
-                            break
-                        # 3글자 이상이며, 상호 부분 포함 관계이고 길이 비율이 0.5 이상일 때만 유사 인정
-                        if len(p_name) >= 3 and len(vn) >= 3:
-                            if (p_name in vn or vn in p_name):
-                                len_ratio = min(len(p_name), len(vn)) / max(len(p_name), len(vn))
-                                if len_ratio >= 0.5:
-                                    name_matched = True
-                                    break
+                # 2. ID 불일치 시 장소명으로 정밀 매칭 및 ID 자동 치유 (Auto-Healing)
+                if not matched_cand and p_name and p_name not in generic_names:
+                    if p_name in cand_by_name:
+                        matched_cand = cand_by_name[p_name]
+                    else:
+                        for vn, cand in cand_by_name.items():
+                            if len(p_name) >= 3 and len(vn) >= 3:
+                                if (p_name in vn or vn in p_name):
+                                    len_ratio = min(len(p_name), len(vn)) / max(len(p_name), len(vn))
+                                    if len_ratio >= 0.5:
+                                        matched_cand = cand
+                                        break
 
-                if not (id_matched or name_matched):
+                if matched_cand:
+                    # 후보 장소의 실제 tour_places.id 및 좌표로 보정
+                    place.placeId = matched_cand["id"]
+                    if matched_cand.get("latitude"):
+                        place.latitude = float(matched_cand["latitude"])
+                    if matched_cand.get("longitude"):
+                        place.longitude = float(matched_cand["longitude"])
+                else:
                     hallucinated.append(f"'{place.placeName}' (ID: {place.placeId})")
 
         if hallucinated:
@@ -170,6 +186,28 @@ class ScheduleJSONParser:
                 f"후보 장소군에 존재하지 않는 장소가 포함되었습니다: {', '.join(hallucinated)}",
                 hallucinated_places=hallucinated,
             )
+
+        # 3. 전체 일정 중복 장소 자동 치유 (각 장소는 전체 일정 중 단 1회만 방문 보장)
+        used_place_ids: Set[str] = set()
+        for daily in schedule.dailySchedules:
+            for place in daily.places:
+                p_id_str = str(place.placeId)
+                if p_id_str in used_place_ids:
+                    alt_cand = next(
+                        (c for c in candidate_places if str(c["id"]) not in used_place_ids and c["category"] == place.category),
+                        next((c for c in candidate_places if str(c["id"]) not in used_place_ids), None)
+                    )
+                    if alt_cand:
+                        app_logger.info(
+                            f"🔄 [중복 장소 치유] Day {daily.day} Step {place.step}: '{place.placeName}'({place.placeId}) -> '{alt_cand['name']}'({alt_cand['id']})"
+                        )
+                        place.placeId = alt_cand["id"]
+                        place.placeName = alt_cand["name"]
+                        place.category = alt_cand["category"]
+                        place.latitude = float(alt_cand["latitude"])
+                        place.longitude = float(alt_cand["longitude"])
+                        p_id_str = str(alt_cand["id"])
+                used_place_ids.add(p_id_str)
 
 
 schedule_parser = ScheduleJSONParser()

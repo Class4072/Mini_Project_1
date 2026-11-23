@@ -18,7 +18,8 @@ class PromptBuilder:
         "2. 날씨가 우천(RAIN)일 경우 반드시 실내 장소 및 비 풍경이 좋은 장소 위주로 배치하고, 추천 사유에 날씨 팁을 명시하십시오.\n"
         "3. 점심 시간(12:00~13:30)과 저녁 시간(18:00~19:30)에는 반드시 음식점이 배치되어야 하며, "
         "식사 직후에는 멀리 이동하지 않고 인근의 [카페/디저트] 또는 [산책/전시 등 컨텐츠]가 순서대로 자연스럽게 이어지도록 설계하십시오.\n"
-        "4. 출력 형식은 다른 설명(인사말, 마크다운 등) 없이 반드시 순수한 JSON 형식만 반환하십시오.\n\n"
+        "4. 전체 여행 기간 동안 한 번 방문한 장소는 다른 날짜나 단계에 중복하여 재방문하지 마십시오. (각 장소 중복 방문 금지)\n"
+        "5. 출력 형식은 다른 설명(인사말, 마크다운 등) 없이 반드시 순수한 JSON 형식만 반환하십시오.\n\n"
         "[JSON 스키마 규격]\n"
         "{\n"
         '  "tripName": "비 오는 가을 부산 감성 힐링 1일 코스",\n'
@@ -90,10 +91,12 @@ class PromptBuilder:
                 f"({lat}, {lon}) | {desc}"
             )
 
+        travel_days = max(1, (req.endDate - req.startDate).days + 1)
+
         prompt_parts = [
             f"### [여행 요청 조건 (02_요청 데이터 명세 기반)]",
             f"- 대상 지역: {region_name} (입력코드: {req.regionCodes or req.regionCode})",
-            f"- 여행 기간: {req.startDate} ~ {req.endDate}",
+            f"- 여행 기간: {req.startDate} ~ {req.endDate} (총 {travel_days}일간 여행 - dailySchedules 배열에 day 1부터 day {travel_days}까지 총 {travel_days}개의 일차 객체를 반드시 빠짐없이 생성하십시오)",
             f"- 동행 유형: {companion_name} ({req.travelerCount or req.personCount or 2}인, 태그: {', '.join(companion_tags)})",
             f"- 이동 수단: {transport_desc}",
             f"- 여행 테마: {themes_desc}",
