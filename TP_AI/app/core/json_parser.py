@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Dict, Any, List, Set, Union
+from typing import Dict, Any, List, Optional, Set, Union
 from uuid import UUID
 from pydantic import ValidationError
 
