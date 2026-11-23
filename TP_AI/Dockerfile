@@ -24,6 +24,7 @@ COPY app app
 # 임베딩 모델 캐시(HF_HOME)는 볼륨으로 붙인다. 볼륨이 이 소유권을 이어받도록 미리 만들어 둔다.
 RUN useradd --system --create-home app \
  && mkdir -p /cache/huggingface && chown -R app /cache
+RUN mkdir -p /app/logs && chown app:app /app/logs
 USER app
 
 EXPOSE 8000
