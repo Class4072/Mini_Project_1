@@ -6,10 +6,8 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.schemas.ai import (
     AIScheduleRequest,
-    DailyWeatherInput,
     AIRescheduleRequest,
     AIScheduleResponse,
-    AIRescheduleResponse,
 )
 from app.core.llm_client import llm_client
 from app.services.ai_schedule_service import ai_schedule_service

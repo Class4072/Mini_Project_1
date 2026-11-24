@@ -1,5 +1,5 @@
 import math
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional
 from app.schemas.ai import MapViewport, MapBounds
 
 

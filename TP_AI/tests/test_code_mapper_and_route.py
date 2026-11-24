@@ -1,7 +1,5 @@
-import pytest
 from app.core.code_mapper import code_mapper
 from app.core.route_planner import route_planner
-from app.schemas.ai import AIScheduleRequest
 
 
 class TestCodeMapperAndRoutePlanner:

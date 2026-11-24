@@ -2,18 +2,17 @@ import sys
 import os
 import json
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.schemas.ai import AIScheduleRequest, DailyWeatherInput, AIScheduleResponse
+from app.schemas.ai import AIScheduleRequest, DailyWeatherInput
 from app.core.json_parser import (
     schedule_parser,
     LLMResponseFormatError,
     LLMHallucinationError,
 )
 from app.core.llm_client import llm_client
-from app.core.prompt_builder import prompt_builder
 
 
 def print_title(title: str):
