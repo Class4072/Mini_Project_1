@@ -10,7 +10,8 @@
     enrich         detailIntro2/detailCommon2 -> place_detail (운영시간·휴무일·실내외, B-10)
     sync           place (+ place_detail) -> travel_spots (임베딩 포함)
     daily          refresh -> gallery -> enrich 를 하루치 한도 안에서 실행 (B-08)
-    schedule       daily를 매일 정해진 시각에 실행하는 상주 스케줄러 (B-08)
+    weather        기상청 단기예보 -> tour_db.weather_forecast (BT-010, tp_batch 계정)
+    schedule       daily(매일)와 weather(3시간마다)를 돌리는 상주 스케줄러 (B-08)
     status         적재 현황, 상세정보 보강 현황, 오늘 호출 수, 최근 실행 이력
 """
 import argparse
@@ -96,7 +97,18 @@ def _build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("daily", help="일일 배치 1회 실행 (refresh -> gallery -> enrich)")
 
-    p_schedule = sub.add_parser("schedule", help="daily를 매일 실행하는 상주 스케줄러")
+    p_weather = sub.add_parser("weather", help="날씨 예보 갱신 (기상청 단기예보 -> tour_db)")
+    p_weather.add_argument("--region", help="이 지역만, 쉼표로 여러 개 (예: PUSAN,SEOUL)")
+    p_weather.add_argument(
+        "--level",
+        choices=("SIDO", "ALL"),
+        help="SIDO: 시도만, ALL: 시군구까지 (기본 WEATHER_REGION_LEVEL)",
+    )
+    p_weather.add_argument(
+        "--dry-run", action="store_true", help="DB에 쓰지 않고 합친 결과만 출력 (키 확인용)"
+    )
+
+    p_schedule = sub.add_parser("schedule", help="daily·weather를 정해진 시각에 실행하는 상주 스케줄러")
     p_schedule.add_argument(
         "--run-now", action="store_true", help="시작하자마자 한 번 실행하고 이후 스케줄대로"
     )
@@ -188,6 +200,14 @@ def main(argv=None) -> int:
 
         result = run_daily(settings)
         return 1 if result.get("skipped") == "locked" else 0
+    if args.command == "weather":
+        from app.jobs.weather import run_weather
+
+        regions = [r.strip() for r in (args.region or "").split(",") if r.strip()]
+        result = run_weather(settings, region_codes=regions or None, level=args.level, dry_run=args.dry_run)
+        if result.get("skipped") == "locked" or result.get("status") == "FAILED":
+            return 1
+        return 1 if result.get("dry_run") and result.get("failed") else 0
     if args.command == "schedule":
         from app.scheduler import run_scheduler
 
