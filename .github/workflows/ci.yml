@@ -64,9 +64,7 @@ jobs:
               - 'TP_BE/gradle/**'
               - '.github/workflows/ci.yml'
             ai_image:
-              - 'TP_AI/Dockerfile'
-              - 'TP_AI/.dockerignore'
-              - 'TP_AI/requirements.txt'
+              - 'TP_AI/**'
               - '.github/workflows/ci.yml'
             batch_image:
               - 'TP_BATCH/Dockerfile'
@@ -143,7 +141,7 @@ jobs:
           cache-to: ${{ github.event_name == 'push' && 'type=gha,mode=max,scope=be' || '' }}
 
   ai:
-    name: AI (문법 검사 · image)
+    name: AI (문법 검사 · lint · image · healthcheck)
     needs: changes
     if: needs.changes.outputs.ai == 'true'
     runs-on: ubuntu-latest
@@ -152,21 +150,54 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      # 테스트(pytest)가 저장소에 들어오면 여기에 추가한다
-      - run: python -m compileall -q TP_AI/app
-      # 이미지 빌드: develop push 는 항상(캐시 저장), PR 은 이미지 관련 파일이 바뀐 경우만
+      # 문법 및 린트 검사: E9(구문오류), F821(누락된 import 및 정의되지 않은 이름 검출)
+      - name: Python 컴파일 및 Ruff 린트 검사
+        run: |
+          pip install ruff
+          python -m compileall -q TP_AI/app
+          ruff check --select E9,F821 TP_AI/app
+      # 이미지 빌드 및 컨테이너 기동 확인: develop push 는 항상(캐시 저장), PR 은 이미지 관련 파일이 바뀐 경우만
       - uses: docker/setup-buildx-action@v3
         if: github.event_name != 'pull_request' || needs.changes.outputs.ai_image == 'true'
-      - name: Docker 이미지 빌드
+      - name: Docker 이미지 빌드 및 로드
         if: github.event_name != 'pull_request' || needs.changes.outputs.ai_image == 'true'
         uses: docker/build-push-action@v6
         with:
           context: TP_AI
+          load: true
           push: false
           tags: tp-ai:ci
           cache-from: type=gha,scope=ai
           # 캐시 내보내기(30~45초)는 develop push 에서만. PR 은 develop 캐시를 읽기만 한다
           cache-to: ${{ github.event_name == 'push' && 'type=gha,mode=max,scope=ai' || '' }}
+      - name: AI 컨테이너 기동 및 /health 확인
+        if: github.event_name != 'pull_request' || needs.changes.outputs.ai_image == 'true'
+        run: |
+          docker run -d --name test-ai -p 8000:8000 \
+            -e DATABASE_URL=postgresql+asyncpg://tp_ai:test@localhost:5432/tour_db \
+            -e LLM_PROVIDER=mock \
+            tp-ai:ci
+
+          # 컨테이너 기동 대기 및 /health 헬스체크 (최대 30초)
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8000/health > /dev/null; then
+              echo "✅ AI 컨테이너 헬스체크 성공 (${i}초 소요)"
+              docker logs test-ai
+              docker stop test-ai && docker rm test-ai
+              exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' test-ai 2>/dev/null)" != "true" ]; then
+              echo "❌ AI 컨테이너가 시작 직후 비정상 종료되었습니다!"
+              docker logs test-ai
+              docker rm -f test-ai
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "❌ AI 컨테이너 헬스체크 응답 타임아웃 (30초)"
+          docker logs test-ai
+          docker rm -f test-ai
+          exit 1
 
   batch:
     name: BATCH (문법 검사 · image)
