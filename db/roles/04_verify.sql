@@ -57,7 +57,8 @@ WITH expected(role, tbl, privs) AS (VALUES
     ('tp_backend', 'trips',              'SELECT, INSERT, UPDATE'),
     ('tp_backend', 'schedules',          'SELECT, INSERT, UPDATE, DELETE'),
     ('tp_backend', 'schedule_places',    'SELECT, INSERT, UPDATE, DELETE'),
-    ('tp_backend', 'trip_shares',        'SELECT, INSERT, DELETE')
+    ('tp_backend', 'trip_shares',        'SELECT, INSERT, DELETE'),
+    ('tp_backend', 'trip_regions',       'SELECT, INSERT')
 ), roles(role) AS (
     VALUES ('tp_batch'), ('tp_ai'), ('tp_backend')
 ), tables AS (
@@ -83,7 +84,7 @@ ORDER BY 1, 2, 3;
 SELECT t AS "테이블"
 FROM unnest(ARRAY['region', 'tour_places', 'tour_place_details', 'tour_place_images',
                   'tour_embeddings', 'weather_forecast', 'users', 'trips', 'schedules',
-                  'schedule_places', 'trip_shares', 'batch_job_log', 'api_call_quota']) AS t
+                  'schedule_places', 'trip_shares', 'trip_regions', 'batch_job_log', 'api_call_quota']) AS t
 WHERE to_regclass('public.' || t) IS NULL;
 
 \echo

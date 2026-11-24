@@ -41,16 +41,20 @@ class TripCommandService(
     private val tourPlaceRepository: TourPlaceRepository,
     private val clock: Clock,
 ) {
-    /** TR-001 1단계: 요청 검증 → 여행을 GENERATING으로 저장 → 여행 기간 날씨 조회 (DATABASE.md 5.3) */
+    /**
+     * TR-001 1단계: 요청 검증 → 여행을 GENERATING으로 저장 → 여행 기간 날씨 조회 (DATABASE.md 5.3).
+     * 지역이 여러 개면 모두 trip_regions에 저장하고, 날씨는 대표 지역(첫 지역) 것을 쓴다.
+     */
     @Transactional
     fun createGeneratingTrip(request: TripCreateRequest): GeneratingTrip {
         val command = request.toCommand()
         validate(command)
-        val region = regionResolver.resolve(command.regionCode)
+        val regions = regionResolver.resolveAll(command.regionCodes)
+        val mainRegion = regions.first()
         val trip =
             tripRepository.save(
                 Trip(
-                    regionCode = region.regionCode,
+                    regionCodes = regions.map { it.regionCode },
                     startDate = command.startDate,
                     endDate = command.endDate,
                     companionType = command.companionType,
@@ -64,14 +68,14 @@ class TripCommandService(
         val forecasts =
             weatherForecastRepository
                 .findAllByRegionCodeAndForecastDateBetweenOrderByForecastDateAsc(
-                    region.regionCode,
+                    mainRegion.regionCode,
                     command.startDate,
                     command.endDate,
                 ).map { DailyForecast(it.forecastDate, it.conditionCode, it.temperature, it.precipitationProb) }
         log.info(
-            "여행 생성 요청 저장 | tripId={}, region={}, period={}~{}, forecastDays={}",
+            "여행 생성 요청 저장 | tripId={}, regions={}, period={}~{}, forecastDays={}",
             trip.id,
-            region.regionCode,
+            trip.regionCodes,
             command.startDate,
             command.endDate,
             forecasts.size,
@@ -170,7 +174,7 @@ class TripCommandService(
             title = requireNotNull(request.title).trim(),
             memo = request.memo?.trim()?.ifBlank { null },
         )
-        return TripResponse.of(trip, regionRepository.findByIdOrNull(trip.regionCode))
+        return TripResponse.of(trip, regionRepository.findAllById(trip.regionCodes))
     }
 
     /** TR-004 Soft Delete. 하위 일정은 여행과 함께 보이지 않게 된다. */
@@ -200,7 +204,7 @@ class TripCommandService(
     }
 
     private fun TripCreateRequest.toCommand(): TripCreateCommand = TripCreateCommand(
-        regionCode = requireNotNull(regionCodes).single(),
+        regionCodes = requireNotNull(regionCodes).map { it.trim() }.distinct(),
         startDate = requireNotNull(startDate),
         endDate = requireNotNull(endDate),
         companionType = requireNotNull(companionType),
@@ -229,9 +233,9 @@ class TripCommandService(
     }
 }
 
-/** 검증을 마친 일정 생성 요청. regionCode는 FE가 보낸 값 그대로다 (AI에 그대로 넘긴다). */
+/** 검증을 마친 일정 생성 요청. regionCodes는 FE가 보낸 값 그대로다 (AI에 그대로 넘긴다). */
 data class TripCreateCommand(
-    val regionCode: String,
+    val regionCodes: List<String>,
     val startDate: LocalDate,
     val endDate: LocalDate,
     val companionType: CompanionType,

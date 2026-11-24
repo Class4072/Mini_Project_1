@@ -119,6 +119,64 @@ class TripApiTest : IntegrationTestSupport() {
     }
 
     @Test
+    fun `전남광주처럼 한 지역을 코드 두 개로 보내면 같은 지역으로 보고 AI에는 두 코드를 그대로 넘긴다`() {
+        givenJeonnamGwangju()
+        val lake = fixtures.place("광주호 호수생태원", "GWANGSAN")
+        AiServerStub.respondJson(AiResponses.schedule(AiDay("SUNNY", listOf(AiStop(lake)))))
+
+        perform(post("/api/v1/trips").jsonBody(tripRequest(regionCodes = listOf("38", "5"), end = tripStart)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.status").value("COMPLETED"))
+            .andExpect(jsonPath("$.data.regionCode").value("JEONNAM_GWANGJU"))
+            .andExpect(jsonPath("$.data.regionName").value("전남광주통합특별시"))
+            .andExpect(jsonPath("$.data.regions.length()").value(1))
+
+        val aiRequest = objectMapper.readTree(AiServerStub.takeRequest().body.readUtf8())
+        assertThat(aiRequest["regionCodes"].map { it.asText() }).containsExactly("38", "5")
+        assertThat(fixtures.count("trip_regions")).isEqualTo(1)
+    }
+
+    @Test
+    fun `서로 다른 지역을 함께 보내면 모두 저장하고 첫 지역을 대표 지역으로 쓴다`() {
+        givenJeonnamGwangju()
+        val beach = fixtures.place("해운대 해수욕장", "HAEUNDAE")
+        val lake = fixtures.place("광주호 호수생태원", "GWANGSAN")
+        fixtures.weather("PUSAN", tripStart, "RAIN", 16.0, 80)
+        fixtures.weather("JEONNAM_GWANGJU", tripStart, "SNOW", -1.0, 90)
+        AiServerStub.respondJson(AiResponses.schedule(AiDay("RAIN", listOf(AiStop(beach), AiStop(lake)))))
+
+        val created =
+            perform(post("/api/v1/trips").jsonBody(tripRequest(regionCodes = listOf("6", "38", "5"), end = tripStart)))
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.data.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.data.regionCode").value("PUSAN"))
+                .andExpect(jsonPath("$.data.regionName").value("부산광역시"))
+                .andExpect(jsonPath("$.data.dailySchedules[0].places.length()").value(2))
+                .data()
+
+        // AI에는 받은 코드를 그대로, 날씨는 대표 지역(부산) 것만 보낸다
+        val aiRequest = objectMapper.readTree(AiServerStub.takeRequest().body.readUtf8())
+        assertThat(aiRequest["regionCodes"].map { it.asText() }).containsExactly("6", "38", "5")
+        assertThat(aiRequest["dailyWeathers"].map { it["condition"].asText() }).containsExactly("RAIN")
+        assertThat(fixtures.count("trip_regions")).isEqualTo(2)
+
+        // 다시 읽어도 고른 순서대로 나온다
+        perform(get("/api/v1/trips/${created["tripId"].asLong()}"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.regions[*].regionCode", contains("PUSAN", "JEONNAM_GWANGJU")))
+            .andExpect(jsonPath("$.data.regions[1].regionName").value("전남광주통합특별시"))
+    }
+
+    @Test
+    fun `지역 코드는 5개까지 받는다`() {
+        perform(post("/api/v1/trips").jsonBody(tripRequest(regionCodes = listOf("1", "2", "3", "4", "5", "6"))))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message", containsString("5개")))
+
+        assertThat(AiServerStub.requestCount).isZero()
+    }
+
+    @Test
     fun `요청 값이 잘못되면 AI를 부르지 않고 400으로 이유를 알려준다`() {
         perform(post("/api/v1/trips").jsonBody(tripRequest(regionCode = "999")))
             .andExpect(status().isBadRequest)

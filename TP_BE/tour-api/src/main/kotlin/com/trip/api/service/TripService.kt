@@ -56,7 +56,7 @@ class TripService(
     }
 
     private fun GeneratingTrip.toAiRequest(): AiScheduleRequest = AiScheduleRequest(
-        regionCodes = listOf(command.regionCode),
+        regionCodes = command.regionCodes,
         startDate = command.startDate,
         endDate = command.endDate,
         companionType = command.companionType.name,

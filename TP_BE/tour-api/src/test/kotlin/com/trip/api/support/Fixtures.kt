@@ -8,8 +8,8 @@ import java.util.UUID
 class Fixtures(private val jdbc: JdbcTemplate) {
     fun truncateAll() {
         jdbc.execute(
-            "TRUNCATE trip_shares, schedule_places, schedules, trips, users, weather_forecast, tour_place_images, " +
-                "tour_place_details, tour_embeddings, tour_places, region RESTART IDENTITY CASCADE",
+            "TRUNCATE trip_shares, trip_regions, schedule_places, schedules, trips, users, weather_forecast, " +
+                "tour_place_images, tour_place_details, tour_embeddings, tour_places, region RESTART IDENTITY CASCADE",
         )
     }
 
