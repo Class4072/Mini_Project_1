@@ -1,8 +1,10 @@
 # syntax=docker/dockerfile:1
-# TP_BATCH 이미지: 기본 실행은 상주 스케줄러 (python -m app.cli schedule, 매일 DAILY_CRON 시각에 daily)
+# TP_BATCH 이미지: 기본 실행은 상주 스케줄러 (python -m app.cli schedule)
+#   매일 DAILY_CRON 시각에 daily, WEATHER_CRON(기본 3시간마다)에 weather (TOUR_DB_PASSWORD·기상청 키가 있을 때)
 # 다른 잡은 같은 이미지로 한 번만 실행한다. 예:
 #   docker compose run --rm batch python -m app.cli status
 #   docker compose run --rm batch python -m app.cli sync     # 임베딩 적재
+#   docker compose run --rm batch python -m app.cli weather --dry-run   # 날씨 키 확인
 # 빌드: docker build -t tp-batch ./TP_BATCH
 
 FROM python:3.11-slim

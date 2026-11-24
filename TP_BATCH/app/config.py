@@ -20,6 +20,9 @@ _SECRETS_KEY_MAP = {
     "TOUR_API_SERVICE_KEY": "TOUR_API_SERVICE_KEY",
     "kma.api.authKey": "KMA_API_AUTH_KEY",
     "KMA_API_AUTH_KEY": "KMA_API_AUTH_KEY",
+    "kma.api.serviceKey": "KMA_API_KEY",
+    "KMA_API_KEY": "KMA_API_KEY",
+    "TOUR_DB_PASSWORD": "TOUR_DB_PASSWORD",
     "db.host": "DB_HOST",
     "db.port": "DB_PORT",
     "db.name": "DB_NAME",
@@ -117,6 +120,11 @@ def _required(key: str) -> str:
     return value
 
 
+# 기상청 단기예보 (BATCH.md 10.2). 허브도 응답은 같고 키 파라미터 이름만 다르다 (app/kma.py)
+KMA_PORTAL_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0"
+KMA_HUB_URL = "https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0"
+
+
 @dataclass(frozen=True)
 class Settings:
     # TourAPI
@@ -155,6 +163,24 @@ class Settings:
     detail_priority_types: Tuple[str, ...]  # 먼저 채울 관광타입 (예: 12,14,39)
     detail_priority_areas: Tuple[str, ...]  # 먼저 채울 지역코드 (예: 32,39)
 
+    # 날씨 예보 (weather, BT-010) — 이 잡만 tour_db에 tp_batch로 쓴다 (DATABASE.md 6장)
+    tour_db_host: str = ""
+    tour_db_port: int = 5432
+    tour_db_name: str = "tour_db"
+    tour_db_user: str = "tp_batch"
+    tour_db_password: str = ""
+    kma_base_url: str = KMA_PORTAL_URL
+    kma_service_key: str = ""
+    kma_daily_limit: int = 1000
+    weather_cron: str = "0 */3 * * *"  # BATCH.md 3장 BT-010
+    weather_region_level: str = "SIDO"  # SIDO: 시도만, ALL: 시군구까지
+    weather_keep_days: int = 7  # 이보다 오래된 지난 예보는 지운다
+
+    @property
+    def weather_ready(self) -> bool:
+        """스케줄러에 날씨 잡을 올릴 설정이 있는지 (tour_db 비밀번호와 기상청 키)."""
+        return bool(self.tour_db_password and self.kma_service_key)
+
     @property
     def dsn(self) -> str:
         return "host={0} port={1} dbname={2} user={3} password={4}".format(
@@ -163,6 +189,7 @@ class Settings:
 
 
 def load_settings() -> Settings:
+    kma_base_url, kma_key = _kma_endpoint()
     return Settings(
         tour_api_service_key=_value("TOUR_API_SERVICE_KEY", ""),
         kor_service_base_url=_value(
@@ -195,4 +222,33 @@ def load_settings() -> Settings:
         # 일정 짜기에 직접 쓰이는 타입(관광지·문화시설·음식점·레포츠·쇼핑)을 먼저 채운다.
         detail_priority_types=_csv("DETAIL_PRIORITY_TYPES", "12,14,39,28,38"),
         detail_priority_areas=_csv("DETAIL_PRIORITY_AREAS", ""),
+        tour_db_host=_value("TOUR_DB_HOST") or _required("DB_HOST"),
+        tour_db_port=int(_value("TOUR_DB_PORT") or _value("DB_PORT", "5432")),
+        tour_db_name=_value("TOUR_DB_NAME", "tour_db"),
+        tour_db_user=_value("TOUR_DB_USER", "tp_batch"),
+        tour_db_password=_value("TOUR_DB_PASSWORD", ""),
+        kma_base_url=kma_base_url,
+        kma_service_key=kma_key,
+        kma_daily_limit=int(_value("KMA_DAILY_LIMIT", "1000")),
+        weather_cron=_value("WEATHER_CRON", "0 */3 * * *"),
+        weather_region_level=_value("WEATHER_REGION_LEVEL", "SIDO").upper(),
+        weather_keep_days=int(_value("WEATHER_KEEP_DAYS", "7")),
     )
+
+
+def _kma_endpoint() -> Tuple[str, str]:
+    """기상청 단기예보 주소와 키.
+
+    - 공공데이터포털: KMA_API_KEY. 비우면 TOUR_API_SERVICE_KEY를 쓴다
+      (포털 인증키는 계정에 하나라 '기상청_단기예보 조회서비스'를 활용신청하면 같은 키로 된다).
+    - 기상청 API 허브: KMA_API_AUTH_KEY (secrets-api.properties의 kma.api.authKey).
+    KMA_BASE_URL을 안 정했으면, 허브 키만 있을 때 허브를 쓰고 아니면 포털을 쓴다.
+    """
+    hub_key = _value("KMA_API_AUTH_KEY", "")
+    portal_key = _value("KMA_API_KEY", "")
+    base_url = _value("KMA_BASE_URL")
+    if not base_url:
+        base_url = KMA_HUB_URL if hub_key and not portal_key else KMA_PORTAL_URL
+    if "apihub.kma.go.kr" in base_url:
+        return base_url, hub_key
+    return base_url, portal_key or _value("TOUR_API_SERVICE_KEY", "")
