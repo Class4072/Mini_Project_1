@@ -28,7 +28,8 @@ erDiagram
     region ||--o{ region : "시도 > 시군구"
     region ||--o{ tour_places : "위치"
     region ||--o{ weather_forecast : "예보 지역"
-    region ||--o{ trips : "여행 지역"
+    region ||--o{ trips : "대표 지역"
+    region ||--o{ trip_regions : "여행 지역"
 
     tour_places ||--o| tour_place_details : "상세정보 (1:1)"
     tour_places ||--o{ tour_place_images : "이미지"
@@ -39,6 +40,7 @@ erDiagram
     trips ||--|{ schedules : "일자별 일정"
     schedules ||--|{ schedule_places : "방문 순서"
     trips ||--o{ trip_shares : "공유 링크"
+    trips ||--|{ trip_regions : "고른 지역 (1~5곳)"
 
     region {
         varchar region_code PK
@@ -87,6 +89,11 @@ erDiagram
         bigint place_id FK
         int visit_order
     }
+    trip_regions {
+        bigint trip_id PK,FK
+        int sort_order PK
+        varchar region_code FK
+    }
 ```
 
 운영용 테이블 `batch_job_log`, `api_call_quota`는 다른 테이블과 관계가 없어 ERD에서 뺐습니다.
@@ -106,6 +113,7 @@ erDiagram
 | `tour_embeddings` | 배치 | AI | BATCH.md 7.2 |
 | `weather_forecast` | 배치 | 백엔드 | BATCH.md 7.3 |
 | `users`, `trips`, `schedules`, `schedule_places`, `trip_shares` | 백엔드 | 백엔드 | BACKEND.md 6.1 |
+| `trip_regions` | 백엔드 | 백엔드 | **신규** (V2, 한 여행에 지역 여러 개) |
 | `batch_job_log` | 배치 | 배치 | BATCH.md BT-014 |
 | `api_call_quota` | 배치 | 배치 | **신규** (호출 한도 관리) |
 
@@ -344,7 +352,8 @@ CREATE INDEX ix_trips_user ON trips (user_id) WHERE deleted_at IS NULL;
 ```
 
 - 요청 필드 이름과 코드값은 [일정 생성 요청 초안](#3-공통-코드-enum)을 따릅니다 (`companion_type`, `traveler_count`, `transport`, `themes`, `places_per_day`, `start_time`).
-- 요청의 `regionCodes`는 TourAPI 지역코드(예: 부산 `"6"`)로 옵니다. 백엔드는 `region_code`가 같은 행, 없으면 `tour_area_code`가 같은 시도 행을 찾아 그 `region_code`를 저장합니다. 지역은 지금 1개만 받습니다 (여러 지역을 받으려면 여행-지역 테이블을 따로 둬야 함).
+- 요청의 `regionCodes`는 TourAPI 지역코드(예: 부산 `"6"`)로 옵니다. 백엔드는 `region_code`가 같은 행, 없으면 `tour_area_code`가 같은 시도 행을 찾습니다. 전남광주의 광주 코드(`"5"`)처럼 시군구에만 있는 코드는 그 시군구의 상위 시도로 봅니다.
+- 지역은 1~5곳까지 고를 수 있습니다. 고른 지역 전부는 [`trip_regions`](#414-trip_regions--여행-지역-v2)에 순서대로 두고, `trips.region_code`에는 첫 지역(대표 지역)을 둡니다. 여행 목록·제목처럼 지역 하나만 필요한 곳은 `region_code`만 읽으면 됩니다.
 - `status`는 AI 일정 생성이 오래 걸릴 때를 대비한 값입니다. 생성 요청 시 `GENERATING`으로 저장하고, AI 응답을 받으면 `COMPLETED`/`FAILED`로 바꿉니다.
 - 최대 14일 제한은 AI 서비스의 상한(TP_AI `API_SPEC.md` 3.2) 기준입니다. FE는 개발 단계라 상한을 두지 않았습니다.
 
@@ -422,6 +431,24 @@ CREATE TABLE api_call_quota (
 );
 ```
 
+### 4.14 `trip_regions` — 여행 지역 (V2)
+
+한 여행에 지역을 여러 곳 고를 수 있게 V2 마이그레이션(`db/migration/V2__trip_regions.sql`)으로 추가했습니다.
+
+```sql
+CREATE TABLE trip_regions (
+    trip_id     BIGINT      NOT NULL REFERENCES trips (id) ON DELETE CASCADE,
+    sort_order  INTEGER     NOT NULL CHECK (sort_order BETWEEN 0 AND 4),  -- 요청 순서, 0 = 대표 지역 (최대 5곳)
+    region_code VARCHAR(20) NOT NULL REFERENCES region (region_code),
+    PRIMARY KEY (trip_id, sort_order),
+    CONSTRAINT uk_trip_region UNIQUE (trip_id, region_code)
+);
+```
+
+- `sort_order = 0`인 행이 대표 지역이고, `trips.region_code`와 같습니다.
+- 여행을 만들 때 같이 넣고 바꾸지 않습니다. 그래서 백엔드에는 SELECT, INSERT만 줍니다.
+- V2 전에 만든 여행은 V2가 대표 지역 한 행으로 채웁니다.
+
 ---
 
 ## 5. 주요 조회 쿼리
@@ -473,6 +500,8 @@ ORDER BY forecast_date;
 -- 행이 없는 날짜는 계절 정보만 AI에 전달
 ```
 
+- 지역이 여러 곳이면 대표 지역(`trips.region_code`)의 예보를 씁니다.
+
 ---
 
 ## 6. DB 계정과 권한
@@ -507,6 +536,7 @@ ORDER BY forecast_date;
 | `schedules` | - | - | SELECT, INSERT, UPDATE, DELETE |
 | `schedule_places` | SELECT | - | SELECT, INSERT, UPDATE, DELETE |
 | `trip_shares` | - | - | SELECT, INSERT, DELETE |
+| `trip_regions` | - | - | SELECT, INSERT |
 | `batch_job_log` | SELECT, INSERT, UPDATE | - | - |
 | `api_call_quota` | SELECT, INSERT, UPDATE | - | - |
 
@@ -573,6 +603,9 @@ GRANT SELECT, INSERT, DELETE         ON trip_shares               TO tp_backend;
 GRANT USAGE, SELECT ON SEQUENCE
     users_id_seq, trips_id_seq, schedules_id_seq, schedule_places_id_seq, trip_shares_id_seq
     TO tp_backend;
+
+-- V2
+GRANT SELECT, INSERT ON trip_regions TO tp_backend;
 ```
 
 - `BIGSERIAL` 컬럼에 INSERT하려면 테이블 권한과 별도로 **시퀀스 권한**(`USAGE`)이 필요합니다.

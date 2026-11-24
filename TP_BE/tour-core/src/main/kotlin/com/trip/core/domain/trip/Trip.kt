@@ -3,15 +3,19 @@ package com.trip.core.domain.trip
 import com.trip.core.domain.BaseTimeEntity
 import com.trip.core.domain.schedule.Schedule
 import jakarta.persistence.CascadeType
+import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
+import jakarta.persistence.OrderColumn
 import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -19,12 +23,11 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-/** 여행 (DATABASE.md 4.8) */
+/** 여행 (DATABASE.md 4.8). 지역은 여러 개일 수 있고 첫 지역이 대표 지역이다 (4.14). */
 @Entity
 @Table(name = "trips")
 class Trip(
-    @Column(name = "region_code", nullable = false)
-    val regionCode: String,
+    regionCodes: List<String>,
     @Column(name = "start_date", nullable = false)
     val startDate: LocalDate,
     @Column(name = "end_date", nullable = false)
@@ -52,6 +55,25 @@ class Trip(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0L
         protected set
+
+    init {
+        require(regionCodes.isNotEmpty()) { "여행 지역이 없습니다." }
+    }
+
+    /** 대표 지역 (요청의 첫 지역) */
+    @Column(name = "region_code", nullable = false)
+    val regionCode: String = regionCodes.first()
+
+    // trip_regions. 여행을 만들 때 같이 넣고 바꾸지 않는다 (tp_backend는 INSERT만 가능)
+    @ElementCollection
+    @CollectionTable(name = "trip_regions", joinColumns = [JoinColumn(name = "trip_id")])
+    @OrderColumn(name = "sort_order")
+    @Column(name = "region_code", nullable = false)
+    private val regionCodeList: MutableList<String> = regionCodes.toMutableList()
+
+    /** 고른 지역 전부 (첫 번째가 대표 지역) */
+    val regionCodes: List<String>
+        get() = regionCodeList.ifEmpty { listOf(regionCode) }
 
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "themes", nullable = false)

@@ -31,8 +31,9 @@ import java.time.OffsetDateTime
  * 값이 빠졌을 때 검증 메시지를 돌려주려고 모두 nullable로 받는다.
  */
 data class TripCreateRequest(
+    // 지역은 여러 개 고를 수 있고 첫 지역이 대표 지역이다. 한 지역을 코드 여러 개로 보내도 된다 (전남광주 ["38", "5"])
     @field:NotEmpty(message = "지역을 선택해 주세요.")
-    @field:Size(max = 1, message = "지역은 하나만 선택할 수 있습니다.")
+    @field:Size(max = 5, message = "지역 코드는 5개까지 보낼 수 있습니다.")
     val regionCodes: List<String>? = null,
     @field:NotNull(message = "출발일을 입력해 주세요.")
     val startDate: LocalDate? = null,
@@ -68,6 +69,7 @@ data class TripResponse(
     val status: TripStatus,
     val regionCode: String,
     val regionName: String?,
+    val regions: List<TripRegionResponse>,
     val startDate: LocalDate,
     val endDate: LocalDate,
     val companionType: CompanionType,
@@ -81,26 +83,34 @@ data class TripResponse(
     val createdAt: OffsetDateTime,
 ) {
     companion object {
-        fun of(trip: Trip, region: Region?): TripResponse = TripResponse(
-            tripId = trip.id,
-            title = trip.title,
-            status = trip.status,
-            regionCode = trip.regionCode,
-            regionName = region?.name,
-            startDate = trip.startDate,
-            endDate = trip.endDate,
-            companionType = trip.companionType,
-            travelerCount = trip.travelerCount,
-            transport = trip.transport,
-            themes = trip.themes,
-            placesPerDay = trip.placesPerDay,
-            startTime = trip.startTime,
-            weatherSummary = trip.weatherSummary,
-            memo = trip.memo,
-            createdAt = trip.createdAt.atZone(KST).toOffsetDateTime(),
-        )
+        /** regions: trip.regionCodes의 region 행 (순서는 상관없음) */
+        fun of(trip: Trip, regions: Collection<Region>): TripResponse {
+            val names = regions.associate { it.regionCode to it.name }
+            return TripResponse(
+                tripId = trip.id,
+                title = trip.title,
+                status = trip.status,
+                regionCode = trip.regionCode,
+                regionName = names[trip.regionCode],
+                regions = trip.regionCodes.map { TripRegionResponse(it, names[it]) },
+                startDate = trip.startDate,
+                endDate = trip.endDate,
+                companionType = trip.companionType,
+                travelerCount = trip.travelerCount,
+                transport = trip.transport,
+                themes = trip.themes,
+                placesPerDay = trip.placesPerDay,
+                startTime = trip.startTime,
+                weatherSummary = trip.weatherSummary,
+                memo = trip.memo,
+                createdAt = trip.createdAt.atZone(KST).toOffsetDateTime(),
+            )
+        }
     }
 }
+
+/** 여행 지역 하나 (DATABASE.md 4.14). 첫 번째가 대표 지역이다. */
+data class TripRegionResponse(val regionCode: String, val regionName: String?)
 
 /** TR-001·TR-002 응답: 여행 정보 + 일자별 일정 (JSON에서는 여행 정보 필드가 같은 단계에 펼쳐진다) */
 data class TripDetailResponse(
@@ -109,8 +119,8 @@ data class TripDetailResponse(
     val dailySchedules: List<DailyScheduleResponse>,
 ) {
     companion object {
-        fun of(trip: Trip, region: Region?): TripDetailResponse =
-            TripDetailResponse(TripResponse.of(trip, region), trip.schedules.map(DailyScheduleResponse::of))
+        fun of(trip: Trip, regions: Collection<Region>): TripDetailResponse =
+            TripDetailResponse(TripResponse.of(trip, regions), trip.schedules.map(DailyScheduleResponse::of))
     }
 }
 

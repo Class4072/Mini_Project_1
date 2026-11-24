@@ -8,10 +8,16 @@ import java.util.Locale
 
 // 엑셀·PDF가 같이 쓰는 표시 문구
 
-internal fun TripDetailResponse.displayTitle(): String = trip.title ?: "${trip.regionName ?: "여행"} 일정"
+internal fun TripDetailResponse.displayTitle(): String = trip.title ?: "${regionLabel() ?: "여행"} 일정"
+
+// 여러 지역이면 "부산광역시·서울특별시"
+internal fun TripDetailResponse.regionLabel(): String? {
+    val names = trip.regions.mapNotNull { it.regionName }.ifEmpty { listOfNotNull(trip.regionName) }
+    return names.joinToString("·").ifBlank { null }
+}
 
 internal fun TripDetailResponse.summaryLine(): String = listOfNotNull(
-    trip.regionName?.let { "지역 $it" },
+    regionLabel()?.let { "지역 $it" },
     "기간 ${trip.startDate} ~ ${trip.endDate}",
     "동행 ${trip.companionType.label} ${trip.travelerCount}명",
     "이동 ${trip.transport.label}",

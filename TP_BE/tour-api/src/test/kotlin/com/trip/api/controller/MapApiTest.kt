@@ -52,6 +52,19 @@ class MapApiTest : IntegrationTestSupport() {
     }
 
     @Test
+    fun `MAP-001 전남(38)과 광주(5) 어느 코드로 찾아도 전남광주 전체 장소를 준다`() {
+        givenJeonnamGwangju()
+        fixtures.place("무등산", "GWANGSAN")
+        fixtures.place("유달산", "MOKPO")
+
+        for (code in listOf("38", "5")) {
+            perform(get("/api/v1/map/places").param("regionCode", code))
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.data[*].name", containsInAnyOrder("무등산", "유달산")))
+        }
+    }
+
+    @Test
     fun `MAP-002 여행 일차별 동선 좌표를 방문 순서대로 준다`() {
         val first = fixtures.place("첫 장소", "HAEUNDAE", latitude = 35.10, longitude = 129.10)
         val second = fixtures.place("둘째 장소", "HAEUNDAE", latitude = 35.20, longitude = 129.20)

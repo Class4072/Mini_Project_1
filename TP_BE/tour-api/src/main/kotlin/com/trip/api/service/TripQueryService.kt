@@ -5,7 +5,6 @@ import com.trip.api.common.ErrorCode
 import com.trip.api.dto.TripDetailResponse
 import com.trip.core.domain.region.RegionRepository
 import com.trip.core.domain.trip.TripRepository
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -19,6 +18,6 @@ class TripQueryService(private val tripRepository: TripRepository, private val r
     fun getTripDetail(tripId: Long): TripDetailResponse {
         val trip =
             tripRepository.findByIdAndDeletedAtIsNull(tripId) ?: throw BusinessException(ErrorCode.TRIP_NOT_FOUND)
-        return TripDetailResponse.of(trip, regionRepository.findByIdOrNull(trip.regionCode))
+        return TripDetailResponse.of(trip, regionRepository.findAllById(trip.regionCodes))
     }
 }

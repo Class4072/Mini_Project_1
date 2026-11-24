@@ -56,13 +56,14 @@ abstract class IntegrationTestSupport {
 
     protected fun tripRequest(
         regionCode: String = "6",
+        regionCodes: List<String> = listOf(regionCode),
         start: LocalDate = tripStart,
         end: LocalDate = tripStart.plusDays(1),
         companionType: String = "FRIENDS",
         travelerCount: Int = 3,
         transport: String = "PUBLIC_TRANSIT",
     ): Map<String, Any> = mapOf(
-        "regionCodes" to listOf(regionCode),
+        "regionCodes" to regionCodes,
         "startDate" to start.toString(),
         "endDate" to end.toString(),
         "companionType" to companionType,
@@ -77,6 +78,13 @@ abstract class IntegrationTestSupport {
     protected fun givenBusan() {
         fixtures.region("PUSAN", "부산광역시", tourAreaCode = "6")
         fixtures.region("HAEUNDAE", "해운대구", level = "SIGUNGU", parent = "PUSAN")
+    }
+
+    /** 전남광주통합특별시. tour_db처럼 시도는 전남 코드(38)를 갖고, 광주 코드(5)는 하위 구에만 있다 */
+    protected fun givenJeonnamGwangju() {
+        fixtures.region("JEONNAM_GWANGJU", "전남광주통합특별시", tourAreaCode = "38")
+        fixtures.region("GWANGSAN", "광산구", level = "SIGUNGU", parent = "JEONNAM_GWANGJU", tourAreaCode = "5")
+        fixtures.region("MOKPO", "목포시", level = "SIGUNGU", parent = "JEONNAM_GWANGJU", tourAreaCode = "38")
     }
 
     /** AI가 days대로 일정을 짜도록 하고 여행을 만든다. 만든 여행의 상세 응답을 돌려준다. */

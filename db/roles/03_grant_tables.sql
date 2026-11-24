@@ -20,7 +20,7 @@ DECLARE
     target_tables constant text[] := ARRAY[
         'region', 'tour_places', 'tour_place_details', 'tour_place_images',
         'tour_embeddings', 'weather_forecast', 'users', 'trips', 'schedules',
-        'schedule_places', 'trip_shares', 'batch_job_log', 'api_call_quota'];
+        'schedule_places', 'trip_shares', 'trip_regions', 'batch_job_log', 'api_call_quota'];
     t       text;
     g       record;
     seq     regclass;
@@ -75,7 +75,8 @@ BEGIN
             ('tp_backend', 'trips',              'SELECT, INSERT, UPDATE'),
             ('tp_backend', 'schedules',          'SELECT, INSERT, UPDATE, DELETE'),
             ('tp_backend', 'schedule_places',    'SELECT, INSERT, UPDATE, DELETE'),
-            ('tp_backend', 'trip_shares',        'SELECT, INSERT, DELETE')
+            ('tp_backend', 'trip_shares',        'SELECT, INSERT, DELETE'),
+            ('tp_backend', 'trip_regions',       'SELECT, INSERT')
         ) AS v(role, tbl, privs)
     LOOP
         CONTINUE WHEN to_regclass('public.' || g.tbl) IS NULL;

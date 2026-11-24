@@ -5,6 +5,7 @@ import com.trip.api.common.ErrorCode
 import com.trip.api.dto.TripDetailResponse
 import com.trip.api.service.export.TripExcelWriter
 import com.trip.api.service.export.TripPdfWriter
+import com.trip.api.service.export.displayTitle
 import com.trip.core.domain.schedule.ScheduleRepository
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
@@ -47,10 +48,7 @@ class ExportService(
     }
 
     private fun fileName(detail: TripDetailResponse, extension: String): String {
-        val title = (detail.trip.title ?: "${detail.trip.regionName ?: "여행"} 일정").replace(
-            UNSAFE_FILE_CHARS,
-            "_",
-        ).take(80)
+        val title = detail.displayTitle().replace(UNSAFE_FILE_CHARS, "_").take(80)
         return "${title}_${detail.trip.startDate}.$extension"
     }
 

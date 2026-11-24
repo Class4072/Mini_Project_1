@@ -77,7 +77,7 @@ SELECT u.t                          AS "테이블",
        pg_get_userbyid(c.relowner)  AS "소유자"
 FROM unnest(ARRAY['region', 'tour_places', 'tour_place_details', 'tour_place_images',
                   'tour_embeddings', 'weather_forecast', 'users', 'trips', 'schedules',
-                  'schedule_places', 'trip_shares', 'batch_job_log', 'api_call_quota'])
+                  'schedule_places', 'trip_shares', 'trip_regions', 'batch_job_log', 'api_call_quota'])
      WITH ORDINALITY AS u(t, n)
 LEFT JOIN pg_class c ON c.oid = to_regclass('public.' || u.t)
 ORDER BY u.n;

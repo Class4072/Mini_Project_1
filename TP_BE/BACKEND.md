@@ -67,31 +67,277 @@ flowchart TD
 ## 3. REST API 전체 명세 (Service API)
 
 모든 API는 `/api/v1` 프리픽스를 사용하며, 일관된 JSON 래퍼 구조로 응답합니다.
+일정 생성 요청의 필드와 코드값은 FE·AI의 일정 생성 요청 초안을 따릅니다 ([DATABASE.md 3장](../TP_DOCS/database/DATABASE.md#3-공통-코드-enum)).
 
-### 3.1 여행(Trip) 관리 API
-| API ID | Method | Endpoint | 설명 | 주요 Request Body | 주요 Response Data |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TR-001** | `POST` | `/api/v1/trips` | 신규 여행 생성 및 AI 일정 자동 발급 | `TripCreateRequest` (지역, 날짜, 테마) | `TripDetailResponse` (생성된 여행 및 일정) |
-| **TR-002** | `GET` | `/api/v1/trips/{id}` | 여행 및 일정 단건 상세 조회 | - | `TripDetailResponse` |
-| **TR-003** | `PUT` | `/api/v1/trips/{id}` | 여행 기본 정보(이름, 메모) 수정 | `TripUpdateRequest` | `TripResponse` |
-| **TR-004** | `DELETE` | `/api/v1/trips/{id}` | 여행 및 하위 일정 삭제 (Soft Delete) | - | `CommonResultResponse` |
+### 3.1 한눈에 보기
 
-### 3.2 일정(Schedule) 및 내보내기 API
-| API ID | Method | Endpoint | 설명 | 주요 Request Body | 주요 Response Data |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **PLAN-001** | `POST` | `/api/v1/schedules` | 수동 편집된 일정 저장/수정 | `ScheduleSaveRequest` | `ScheduleResponse` |
-| **PLAN-002** | `POST` | `/api/v1/schedules/share` | 읽기 전용 일정 공유 URL 생성 | `{"scheduleId": 101}` | `{"shareUrl": "https://trp.com/s/xyz"}` |
-| **PLAN-003** | `GET` | `/api/v1/schedules/{id}/export/excel` | 여행 일정 엑셀 파일 다운로드 | - | Excel 바이너리 스트림 (`.xlsx`) |
-| **PLAN-004** | `GET` | `/api/v1/schedules/{id}/export/pdf` | 여행 일정 PDF 파일 다운로드 | - | PDF 바이너리 스트림 (`.pdf`) |
+| 기능 | Method | URL | FE에서 쓰는 곳 |
+| :--- | :--- | :--- | :--- |
+| **TR-001** 일정 생성 (AI) | `POST` | `/api/v1/trips` | 메인 질문 흐름의 [일정 만들기] |
+| **TR-002** 여행·일정 조회 | `GET` | `/api/v1/trips/{tripId}` | 일정 화면 `/itinerary/:id` |
+| **TR-003** 여행 이름·메모 수정 | `PUT` | `/api/v1/trips/{tripId}` | 일정 화면의 제목·메모 편집 |
+| **TR-004** 여행 삭제 | `DELETE` | `/api/v1/trips/{tripId}` | 여행 삭제 |
+| **PLAN-001** 하루 일정 편집 저장 | `POST` | `/api/v1/schedules` | 일정 편집 (순서 변경, 장소 추가·삭제, 시간 수정) |
+| **PLAN-002** 공유 링크 만들기 | `POST` | `/api/v1/schedules/share` | [일정 공유 링크 복사] |
+| **공유 조회** (추가) | `GET` | `/api/v1/shares/{token}` | 공유 링크를 연 사람의 화면 |
+| **PLAN-003** 엑셀 다운로드 | `GET` | `/api/v1/schedules/{scheduleId}/export/excel` | [엑셀 다운로드] |
+| **PLAN-004** PDF 다운로드 | `GET` | `/api/v1/schedules/{scheduleId}/export/pdf` | [PDF 다운로드] |
+| **MAP-001** 지도 마커용 장소 | `GET` | `/api/v1/map/places` | 지도에 지역의 장소 마커 표시 |
+| **MAP-002** 일차별 동선 | `GET` | `/api/v1/map/route` | 일차별 Polyline |
+| **MAP-003** 길찾기 | `GET` | `/api/v1/map/navigation` | 두 장소 사이 이동 시간·거리 |
+| **MAP-004** 주변 장소 | `GET` | `/api/v1/map/nearby` | 대체 장소 찾기, 내 주변 |
+| **MAP-005** 장소 검색 | `GET` | `/api/v1/map/search` | 장소 이름 검색 (추가·대체) |
 
-### 3.3 지도(Map) 및 장소 탐색 API
-| API ID | Method | Endpoint | 설명 | Query Parameters | 주요 Response Data |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **MAP-001** | `GET` | `/api/v1/map/places` | 카카오맵 마커용 장소 목록 조회 | `regionCode`, `category`, `page` | `List<PlaceMarkerResponse>` |
-| **MAP-002** | `GET` | `/api/v1/map/route` | 특정 여행 일차별 Polyline 동선 조회 | `tripId`, `dayNumber` | `RoutePolylineResponse` (좌표 배열) |
-| **MAP-003** | `GET` | `/api/v1/map/navigation` | 출발-도착 최적 길찾기 경로 | `startLat`, `startLng`, `endLat`, `endLng` | `NavigationResponse` (시간, 거리) |
-| **MAP-004** | `GET` | `/api/v1/map/nearby` | 내 주변(반경 N km) 관광지/맛집 탐색 | `lat`, `lng`, `radiusMeter=3000` | `List<PlaceSummaryResponse>` |
-| **MAP-005** | `GET` | `/api/v1/map/search` | 키워드 장소 검색 | `keyword`, `page` | `List<PlaceSummaryResponse>` |
+공유 조회는 표에 없던 API로, PLAN-002로 만든 링크를 열려면 필요해서 추가했습니다.
+
+### 3.2 공통 규칙
+
+- **응답 형식**: 성공·실패 모두 [5.1 `ApiResponse`](#51-공통-응답-wrapper-apiresponset)로 감쌉니다. 실제 데이터는 `data`에 있습니다. 실패하면 `success: false`와 함께 `code`(오류 코드)와 `message`(화면에 그대로 보여 줘도 되는 한국어 문구)가 오고 `data`는 `null`입니다. 파일 다운로드(PLAN-003·004)만 감싸지 않고 파일을 그대로 보냅니다.
+- **날짜·시간**: 날짜는 `"2026-11-14"`, 시각은 `"10:30"`입니다 (요청에서는 `"10:30:00"`도 받음). 생성 시각은 한국 시간 ISO-8601 `"2026-11-11T13:59:51.176126+09:00"`입니다 (초 아래 자리는 길이가 달라질 수 있음).
+- **이름**: JSON 필드는 camelCase, 코드값은 영문 대문자 그대로입니다 (예: `"PUBLIC_TRANSIT"`).
+- **로그인**: 아직 없습니다. 모든 API를 로그인 없이 씁니다.
+- **추적 ID**: 모든 응답 헤더에 `X-Trace-Id`가 있습니다. 오류를 알릴 때 이 값을 같이 주면 서버 로그에서 바로 찾을 수 있습니다.
+- **페이지**: `page`는 0부터 셉니다. 목록 API는 전체 개수를 주지 않으므로, 받은 개수가 `size`보다 적으면 마지막 페이지입니다.
+
+| 오류 코드 | HTTP | 언제 |
+| :--- | :--- | :--- |
+| `INVALID_REQUEST` | 400 | 필수값 누락, 형식·코드값 오류, 날짜·인원 규칙 위반 (`message`에 필드와 이유) |
+| `REGION_NOT_FOUND` | 400 | 모르는 지역 코드 |
+| `PLACE_NOT_FOUND` | 400 | 일정 편집에 없는(또는 폐업한) 장소가 들어 있음 |
+| `TRIP_NOT_FOUND` | 404 | 없는 여행, 삭제된 여행 |
+| `SCHEDULE_NOT_FOUND` | 404 | 없는 일정, 삭제된 여행의 일정 |
+| `SHARE_NOT_FOUND` | 404 | 없는 공유 링크, 삭제된 여행의 링크 |
+| `SHARE_EXPIRED` | 410 | 만료된 공유 링크 |
+| `AI_SERVICE_ERROR` | 502 | AI 서비스 오류, 연결 실패 |
+| `AI_INVALID_RESPONSE` | 502 | AI가 장소 목록에 없는 장소만 돌려줌 |
+| `AI_SERVICE_TIMEOUT` | 504 | AI가 100초 안에 답하지 않음 |
+| `NOT_FOUND`, `METHOD_NOT_ALLOWED` | 404, 405 | 없는 URL, 잘못된 메서드 |
+| `EXPORT_FAILED`, `INTERNAL_SERVER_ERROR` | 500 | 서버 오류 |
+
+### 3.3 여행 API
+
+#### TR-001 `POST /api/v1/trips` — 일정 생성
+
+여행 조건에 여행 기간의 날씨를 붙여 AI에 일정 생성을 맡기고, 저장한 결과를 돌려줍니다. AI 응답을 기다리므로 **최대 100초**까지 걸릴 수 있습니다 (FE 타임아웃은 120초).
+
+요청 `TripCreateRequest` (FE `toTripRequest()` 결과 그대로):
+
+```json
+{
+  "regionCodes": ["6"],
+  "startDate": "2026-11-14",
+  "endDate": "2026-11-15",
+  "companionType": "FRIENDS",
+  "travelerCount": 3,
+  "transport": "PUBLIC_TRANSIT",
+  "themes": ["FOOD", "NATURE"],
+  "placesPerDay": "NORMAL",
+  "startTime": "NORMAL"
+}
+```
+
+| 필드 | 필수 | 규칙 |
+| :--- | :--- | :--- |
+| `regionCodes` | O | 1~5개. TourAPI 지역코드(예: 부산 `"6"`) 또는 `region_code`(예: `"PUSAN"`). 서로 다른 지역을 여러 개 골라도 되고(부산+서울 `["6", "1"]`), 첫 지역이 대표 지역이다. 한 지역을 코드 여러 개로 보내면 한 지역으로 본다 (전남광주 `["38", "5"]`). 날씨는 대표 지역 예보를 붙이고, AI에는 받은 코드를 그대로 넘긴다 |
+| `startDate`, `endDate` | O | 출발일은 오늘(한국 시간) 이후, 도착일은 출발일과 같거나 뒤, 최대 14일 |
+| `companionType` | O | `SOLO`, `COUPLE`, `FRIENDS`, `FAMILY_WITH_KIDS`, `FAMILY_WITH_PARENTS`, `GROUP` |
+| `travelerCount` | O | `SOLO`면 1, 그 외에는 2~100 |
+| `transport` | O | `CAR`, `PUBLIC_TRANSIT`, `WALK` |
+| `themes` | | 0~3개, 빈 배열이면 '골고루'. `NATURE`, `HISTORY_CULTURE`, `FOOD`, `CAFE`, `ACTIVITY`, `SHOPPING`, `FESTIVAL`, `HEALING` |
+| `placesPerDay` | | `RELAXED`, `NORMAL`(기본), `PACKED` |
+| `startTime` | | `EARLY`, `NORMAL`(기본), `LATE` |
+
+응답 `data`: [`TripDetailResponse`](#36-응답-객체). 만들어진 여행 ID는 `data.tripId`입니다.
+
+실패하면 400(요청 값) 또는 502·504(AI)입니다. 실패한 여행은 `FAILED` 상태로 남고, 다시 요청하면 새 여행이 만들어집니다.
+
+#### TR-002 `GET /api/v1/trips/{tripId}` — 여행·일정 조회
+
+일정 화면에 필요한 데이터 전부입니다 (일자별 일정, 장소 좌표·이미지·추천 이유 포함). 응답 `data`: [`TripDetailResponse`](#36-응답-객체). 삭제된 여행은 404입니다.
+
+#### TR-003 `PUT /api/v1/trips/{tripId}` — 여행 이름·메모 수정
+
+```json
+{ "title": "우리 부산 여행", "memo": "KTX 9시 출발" }
+```
+
+- `title`은 필수(100자 이하), `memo`는 2000자 이하입니다.
+- PUT이라 보낸 값으로 바꿉니다. `memo`를 빼거나 비우면 메모가 지워지므로, 제목만 바꿀 때도 기존 메모를 같이 보냅니다.
+
+응답 `data`: `TripResponse` (일정 목록 없이 여행 정보만).
+
+#### TR-004 `DELETE /api/v1/trips/{tripId}` — 여행 삭제
+
+응답 `data`: `{ "id": 12, "result": true }`. 이후 이 여행과 공유 링크는 404입니다 (DB에서 지우지 않고 `deleted_at`만 기록).
+
+### 3.4 일정·공유·내보내기 API
+
+#### PLAN-001 `POST /api/v1/schedules` — 하루 일정 편집 저장
+
+하루(일차)의 방문 장소를 **통째로 바꿉니다.** 목록 순서가 방문 순서(`step` 1, 2, 3…)가 됩니다. 순서 변경, 추가, 삭제, 시간 수정 모두 바뀐 전체 목록을 보내면 됩니다.
+
+```json
+{
+  "scheduleId": 101,
+  "places": [
+    { "placeId": 2, "startTime": "12:00", "endTime": "13:00" },
+    { "placeId": 4, "startTime": "13:10", "endTime": "14:00", "reason": "식후 커피" },
+    { "placeId": 1 }
+  ]
+}
+```
+
+- `scheduleId`: `TripDetailResponse.dailySchedules[].scheduleId`
+- `placeId`: 장소 ID. TR-002 응답이나 MAP-001·004·005 응답의 `placeId`
+- `startTime`·`endTime`·`reason`은 생략할 수 있고, 하루 최대 20곳입니다. 빈 배열을 보내면 그날 일정을 비웁니다.
+
+응답 `data`: `ScheduleResponse` (`tripId`와 그날 일정). 오류: 400 `PLACE_NOT_FOUND`(없는·폐업한 장소), 400 `INVALID_REQUEST`(끝 시각이 시작보다 앞), 404 `SCHEDULE_NOT_FOUND`.
+
+#### PLAN-002 `POST /api/v1/schedules/share` — 공유 링크 만들기
+
+요청은 `{ "scheduleId": 101 }`입니다. 여행의 아무 일차 ID나 보내면 **여행 전체**를 공유합니다 ([DATABASE.md 팀 합의 4번](../TP_DOCS/database/DATABASE.md#팀-합의가-필요한-것) 제안).
+
+응답 `data`: `{ "shareUrl": "https://trp.com/s/Pxt1ytUX…", "token": "Pxt1ytUX…" }`. 같은 여행은 몇 번 불러도 같은 링크입니다. `shareUrl`의 앞부분은 서버 설정 `SHARE_BASE_URL`이고, 로컬 개발에서는 `http://localhost:5173/s`입니다.
+
+#### 공유 조회 `GET /api/v1/shares/{token}`
+
+공유 링크를 연 사람의 화면(`/s/{token}`)이 쓰는 데이터입니다. 응답 `data`: [`TripDetailResponse`](#36-응답-객체) (읽기 전용, `memo`는 항상 `null`). 오류: 404 `SHARE_NOT_FOUND`, 410 `SHARE_EXPIRED`.
+
+#### PLAN-003·004 `GET /api/v1/schedules/{scheduleId}/export/excel`, `/export/pdf` — 파일 다운로드
+
+여행 전체 일정을 엑셀(.xlsx) 또는 PDF로 받습니다. `ApiResponse`로 감싸지 않고 파일을 그대로 보내며, 파일 이름은 `Content-Disposition` 헤더에 있습니다 (예: `우리 부산 여행_2026-11-14.xlsx`).
+
+- 가장 간단한 방법은 링크입니다: `<a href="/api/v1/schedules/101/export/excel">`. 브라우저가 파일 이름까지 알아서 저장합니다.
+- axios로 받을 때는 `responseType: "blob"`을 씁니다.
+- 오류(없는 일정 등)는 파일 대신 JSON(`ApiResponse`)으로 옵니다.
+
+### 3.5 지도·장소 API
+
+#### MAP-001 `GET /api/v1/map/places` — 지도 마커용 장소
+
+| 파라미터 | 필수 | 설명 |
+| :--- | :--- | :--- |
+| `regionCode` | O | TourAPI 지역코드(`6`) 또는 `region_code`. 시도를 고르면 하위 시군구 장소까지. 전남광주는 `38`·`5` 어느 쪽이든 전체가 나온다 |
+| `category` | | `TOUR_SPOT`, `CULTURE`, `FESTIVAL`, `LEISURE`, `ACCOMMODATION`, `SHOPPING`, `RESTAURANT`, `CAFE` |
+| `page`, `size` | | 0부터, 기본 100개 (최대 500) |
+
+응답 `data`:
+
+```json
+[{ "placeId": 3, "name": "해운대해수욕장", "category": "TOUR_SPOT", "latitude": 35.1587, "longitude": 129.1604, "isIndoor": false }]
+```
+
+#### MAP-002 `GET /api/v1/map/route?tripId=12&dayNumber=1` — 일차별 동선
+
+응답 `data`:
+
+```json
+{ "tripId": 12, "dayNumber": 1, "coordinates": [{ "step": 1, "placeId": 1, "lat": 35.0784, "lng": 129.0807 }] }
+```
+
+방문 순서대로라 그대로 `kakao.maps.Polyline`의 `path`로 쓰면 됩니다. TR-002 응답에도 장소 좌표가 있으므로 일정 화면에서는 이 API 없이 그려도 됩니다.
+
+#### MAP-003 `GET /api/v1/map/navigation?startLat=…&startLng=…&endLat=…&endLng=…` — 길찾기
+
+응답 `data`:
+
+```json
+{ "distanceMeters": 15322, "durationSeconds": 1839, "source": "KAKAO", "path": [{ "lat": 35.1152, "lng": 129.0422 }] }
+```
+
+- `source: "KAKAO"`: 카카오모빌리티 자동차 경로입니다. `path`는 실제 도로 좌표입니다.
+- `source: "ESTIMATE"`: 서버에 카카오 키가 없거나 호출이 실패한 경우의 추정값입니다 (직선거리 × 1.3, 시속 30km). `path`는 출발·도착 두 점입니다.
+- 지금은 자동차 기준만 있습니다.
+
+#### MAP-004 `GET /api/v1/map/nearby` — 주변 장소
+
+| 파라미터 | 필수 | 설명 |
+| :--- | :--- | :--- |
+| `lat`, `lng` | O | 기준 좌표 |
+| `radiusMeter` | | 반경(m), 기본 3000 (100~20000) |
+| `category` | | MAP-001과 같음 |
+| `size` | | 기본 30개 (최대 100) |
+
+응답 `data`: `PlaceSummaryResponse` 목록. **가까운 순**이고 `distanceMeters`가 채워집니다.
+
+#### MAP-005 `GET /api/v1/map/search?keyword=해운대` — 장소 이름 검색
+
+`keyword`는 필수(1~50자)이고, `page`(0부터)·`size`(기본 20, 최대 100)를 쓸 수 있습니다. 응답 `data`: `PlaceSummaryResponse` 목록 (이름순, `distanceMeters`는 `null`).
+
+### 3.6 응답 객체
+
+**`TripDetailResponse`** (TR-001, TR-002, 공유 조회)
+
+```json
+{
+  "tripId": 12,
+  "title": "부산 미식·바다 1박 2일",
+  "status": "COMPLETED",
+  "regionCode": "PUSAN",
+  "regionName": "부산광역시",
+  "regions": [
+    { "regionCode": "PUSAN", "regionName": "부산광역시" }
+  ],
+  "startDate": "2026-11-14",
+  "endDate": "2026-11-15",
+  "companionType": "FRIENDS",
+  "travelerCount": 3,
+  "transport": "PUBLIC_TRANSIT",
+  "themes": ["FOOD", "NATURE"],
+  "placesPerDay": "NORMAL",
+  "startTime": "NORMAL",
+  "weatherSummary": "1일차 비 예보로 실내 위주",
+  "memo": null,
+  "createdAt": "2026-11-11T13:59:51.176126+09:00",
+  "dailySchedules": [
+    {
+      "scheduleId": 101,
+      "dayNumber": 1,
+      "date": "2026-11-14",
+      "weatherCondition": "RAIN",
+      "temperature": 16.0,
+      "precipitationProbability": 80,
+      "places": [
+        {
+          "step": 1,
+          "placeId": 1,
+          "placeName": "국립해양박물관",
+          "category": "CULTURE",
+          "isIndoor": true,
+          "address": "부산 영도구 해양로301번길 45",
+          "imageUrl": null,
+          "latitude": 35.0784,
+          "longitude": 129.0807,
+          "startTime": "10:00",
+          "endTime": "11:30",
+          "stayTimeMinutes": 90,
+          "reason": "비를 피해 둘러보기 좋은 실내 전시"
+        }
+      ]
+    }
+  ]
+}
+```
+
+- `regions`: 고른 지역 전부, 고른 순서대로. `regionCode`·`regionName`은 그중 첫 지역(대표 지역)입니다.
+- `status`: `GENERATING`(생성 중), `COMPLETED`, `FAILED`. 생성 중이거나 실패한 여행은 `dailySchedules`가 빈 배열입니다.
+- `title`·`weatherSummary`: AI가 지은 값입니다. `title`은 TR-003으로 바꿀 수 있습니다.
+- 여행의 `startTime`은 코드값(`EARLY`·`NORMAL`·`LATE`)이고, 장소의 `startTime`·`endTime`은 시각(`"10:00"`)입니다.
+- `weatherCondition`: `SUNNY`, `CLOUDY`, `RAIN`, `SNOW` 또는 `null`. 예보가 있던 날은 `temperature`(℃)와 `precipitationProbability`(%)도 채워지고, 예보가 없던 날은 AI가 가정한 날씨만 있습니다.
+- `stayTimeMinutes`: `endTime - startTime`(분). 시각이 없으면 `null`입니다.
+- `isIndoor`: 실내 장소 여부 (비 오는 날 표시 등).
+
+**`TripResponse`** (TR-003): `TripDetailResponse`에서 `dailySchedules`만 뺀 것입니다.
+
+**`ScheduleResponse`** (PLAN-001): `tripId`에 `dailySchedules[]` 한 개와 같은 필드(`scheduleId`, `dayNumber`, `date`, 날씨, `places`)가 같은 단계로 붙습니다.
+
+**`PlaceSummaryResponse`** (MAP-004·005): `placeId`, `name`, `category`, `address`, `latitude`, `longitude`, `isIndoor`, `imageUrl`, `distanceMeters`.
+
+### 3.7 FE에서 붙일 때
+
+- 실제 데이터는 항상 `response.data.data`에 있습니다. `apiClient`에서 `data`만 꺼내 주면 편합니다 ([FRONTEND.md](../TP_FE/FRONTEND.md) API 통신 장).
+- 오류일 때는 `error.response.data.message`를 그대로 보여 주면 됩니다.
+- 타임아웃은 TR-001만 120초로 길게 잡습니다.
 
 ---
 
