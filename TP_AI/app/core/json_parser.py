@@ -1,10 +1,9 @@
 import json
 import re
-from typing import Dict, Any, List, Optional, Set, Union
-from uuid import UUID
+from typing import Dict, Any, List, Optional, Set
 from pydantic import ValidationError
 
-from app.schemas.ai import AIScheduleResponse, AIDailySchedule, AISchedulePlace
+from app.schemas.ai import AIScheduleResponse
 from app.core.logger import app_logger
 
 

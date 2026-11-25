@@ -1,7 +1,6 @@
 import asyncio
 import threading
-from typing import List, Union
-import numpy as np
+from typing import List
 from sentence_transformers import SentenceTransformer
 
 from app.config import settings

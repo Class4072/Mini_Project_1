@@ -1,9 +1,8 @@
 from typing import List, Optional, Dict, Any, Tuple
 from uuid import UUID
 from datetime import datetime, timezone, timedelta
-from collections import defaultdict
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, func, and_, or_
+from sqlalchemy import select, func, and_
 
 from app.models.travel import TravelSpot
 from app.schemas.travel import (

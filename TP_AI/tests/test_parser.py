@@ -4,9 +4,6 @@ from app.core.json_parser import (
     LLMResponseFormatError,
     LLMHallucinationError,
 )
-from app.core.prompt_builder import prompt_builder
-from app.core.code_mapper import code_mapper
-from app.schemas.ai import AIScheduleRequest, DailyWeatherInput
 
 
 class TestJSONParserAndHallucination:

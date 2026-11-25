@@ -1,8 +1,6 @@
-import json
 from typing import List, Dict, Any, Optional
-from datetime import date
 
-from app.schemas.ai import AIScheduleRequest, DailyWeatherInput
+from app.schemas.ai import AIScheduleRequest
 from app.core.code_mapper import code_mapper
 
 
