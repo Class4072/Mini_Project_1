@@ -36,10 +36,10 @@ describe("generateItinerary", () => {
 
   it("useMock 이 false 면 정해진 주소로 요청 본문을 POST 하고, 타임아웃은 120초다", async () => {
     env.useMock = false;
-    apiClient.post.mockResolvedValue({ data: { itineraryId: "abc-123" } });
+    apiClient.post.mockResolvedValue({ data: { success: true, data: { tripId: 12 } } });
 
-    await expect(generateItinerary(REQUEST_BODY)).resolves.toEqual({ itineraryId: "abc-123" });
-    expect(GENERATE_ITINERARY_PATH).toBe("/api/v1/itinerary/itineraries/generate");
+    await expect(generateItinerary(REQUEST_BODY)).resolves.toEqual({ itineraryId: 12 });
+    expect(GENERATE_ITINERARY_PATH).toBe("/api/v1/trips");
     expect(apiClient.post).toHaveBeenCalledWith(GENERATE_ITINERARY_PATH, REQUEST_BODY, {
       timeout: GENERATE_ITINERARY_TIMEOUT_MS,
     });
@@ -67,7 +67,7 @@ describe("generateItinerary", () => {
   it("개발 모드에서만 걸린 시간을 logger.debug 로 남긴다", async () => {
     const debug = jest.spyOn(console, "debug").mockImplementation(() => {});
     env.useMock = false;
-    apiClient.post.mockResolvedValue({ data: { itineraryId: "abc-123" } });
+    apiClient.post.mockResolvedValue({ data: { success: true, data: { tripId: 12 } } });
 
     env.isDev = false;
     await generateItinerary(REQUEST_BODY);

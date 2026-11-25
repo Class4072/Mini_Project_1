@@ -3,8 +3,7 @@ import { env } from "../../config/env";
 import { logger } from "../../utils/logger";
 import { generateItineraryMock } from "./tripRequestApi.mock";
 
-// 임시 주소, 백엔드 확정 후 변경
-export const GENERATE_ITINERARY_PATH = "/api/v1/itinerary/itineraries/generate";
+export const GENERATE_ITINERARY_PATH = "/api/v1/trips";
 
 // LLM 생성이 오래 걸려 이 요청만 타임아웃을 늘린다.
 export const GENERATE_ITINERARY_TIMEOUT_MS = 120_000;
@@ -13,7 +12,7 @@ async function postGenerateItinerary(requestBody) {
   const { data } = await apiClient.post(GENERATE_ITINERARY_PATH, requestBody, {
     timeout: GENERATE_ITINERARY_TIMEOUT_MS,
   });
-  return { itineraryId: data.itineraryId };
+  return { itineraryId: data.data.tripId };
 }
 
 // requestBody 는 toTripRequest(state) 결과. → Promise<{ itineraryId }>
